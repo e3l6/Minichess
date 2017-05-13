@@ -1,0 +1,12 @@
+# Don't track these intermediate, log, and garbage files.
+.*
+*~
+*#
+*.ali
+*.aux
+*.o
+*.log
+*.synctex.gz
+.#*
+
+sh-proj1-2.c
