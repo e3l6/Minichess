@@ -6,9 +6,12 @@
 --
 -------------------------------------------------------------------------------
 
-with Board;  use Board;
+with Ada.Text_IO; use Ada.Text_IO;
+with Board;       use Board;
 
 procedure MC is
+   
+   Move_List : Move_Vectors.Vector;
    
 begin
    
@@ -16,26 +19,45 @@ begin
    
    Print_Board;
    
-   Undo_Move;  -- Invalid (No moves played yet);
+   Print_Position_Lists;
+      
+   Put_Line ("Move list:");
    
-   Move_Piece ("a2-a3"); -- Valid
+   Move_List := Move_Symmetry_Scan ((1, B), 1, 2, True);
    
-   Print_Board;
+   Move_List := Move_Vectors."&" (Move_List,
+                                  Move_Symmetry_Scan ((1, B), -1, 2, True));
    
-   --  Move_Piece ("a2-a3"); -- Invalid (no piece to move)
+   Print_Move_List (Move_List);
    
-   --  Print_Board;
+   Put_Line ("Move:");
    
-   Move_Piece ("b5-b4"); -- Valid
-   
-   Print_Board;
-   
-   --  Move_Piece ("a3-b1"); -- Invalid (Attempting to caputure own piece)
-   
-   --  Print_Board;
-   
-   Undo_Move;
+   Move_Piece ("b1-c3");
    
    Print_Board;
    
+   Print_Position_Lists;
+   
+   Put_Line ("Move:");
+   
+   Move_Piece ("a5-a4");
+   
+   Print_Board;
+   
+   Print_Position_Lists;
+   
+   Put_Line ("Move list:");
+   
+   Move_List := Move_Symmetry_Scan ((3, C), 1, 2, True);
+   
+   Move_List := Move_Vectors."&" (Move_List,
+                                  Move_Symmetry_Scan ((3, C), -1, 2, True));
+   
+   Print_Move_List (Move_List);
+   
+   Put_Line ("Move:");
+   
+   Move_Piece ("c3-a4");
+   
+   Print_Board;
 end;
