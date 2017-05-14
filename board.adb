@@ -16,9 +16,6 @@ package body Board is
    White_Piece_Set : Character_Set := To_Set ("BKNPRQ");
    Black_Piece_Set : Character_Set := To_Set ("bknprq");
    
-   White_Positions : Position_Vectors.Vector;
-   Black_Positions : Position_Vectors.Vector;
-   
    Board_State     : Board_State_Type;
    
    Game_Log        : Move_Vectors.Vector;
@@ -65,11 +62,138 @@ package body Board is
    
    
    ----------------------------------------------------------------------------
-   --  procedure Move_generator is
+   function Move_Generator (Position_List : in     Position_Vectors.vector)
+                           return Move_Vectors.Vector is
+      
+      Cursor     : Position_Vectors.Cursor;
+      Move_List  : Move_Vectors.Vector;
+      Position   : Board_Position_Type; 
+      Stop_Short : Boolean                 := False;
+      Capture    : Capture_Type            := False;
+      
+   begin
+      
+      Cursor := Position_Vectors.First (Position_List);
+      
+      while (Position_Vectors.Has_Element (Cursor)) loop
+         
+         Position := Position_Vectors.Element (Cursor);
+         
+         case Board_State.Board_Array(Position.R, Position.C) is
+            
+            when 'K' | 'k' =>
+               
+               Stop_Short := True;
+               Capture    := True;
+               Move_List  := Move_Vectors."&" (Move_List,
+                                               Move_Symmetry_Scan
+                                               (Position, 0, 1,
+                                                Stop_Short, Capture));
+               Move_List  := Move_Vectors."&" (Move_List,
+                                               Move_Symmetry_Scan
+                                               (Position, 1, 1,
+                                                Stop_Short, Capture));
+      
+            when 'Q' | 'q' =>
+               
+               Stop_Short := False;
+               Capture    := True;
+               Move_List  := Move_Vectors."&" (Move_List,
+                                               Move_Symmetry_Scan
+                                               (Position, 0, 1,
+                                                Stop_Short, Capture));
+               Move_List  := Move_Vectors."&" (Move_List,
+                                               Move_Symmetry_Scan
+                                               (Position, 1, 1,
+                                                Stop_Short, Capture));
+            when 'R' | 'r' =>
+               
+               Stop_Short := false;
+               Capture    := True;
+               Move_List  := Move_Vectors."&" (Move_List,
+                                               Move_Symmetry_Scan
+                                               (Position, 0, 1,
+                                                Stop_Short, Capture));
+               
+            when 'B' | 'b' =>
+               
+               Stop_Short := True;
+               Capture    := False;
+               Move_List  := Move_Vectors."&" (Move_List,
+                                               Move_Symmetry_Scan
+                                               (Position, 0, 1,
+                                                Stop_Short, Capture));
+               Stop_Short := False;
+               Capture    := True;
+               Move_List  := Move_Vectors."&" (Move_List,
+                                               Move_Symmetry_Scan
+                                               (Position, 1, 1,
+                                                Stop_Short, Capture)); 
+               
+            when 'N' | 'n' =>
+               
+               Stop_Short := True;
+               Capture    := True;
+               Move_List  := Move_Vectors."&" (Move_List,
+                                               Move_Symmetry_Scan
+                                               (Position, 1, 2,
+                                                Stop_Short, Capture));
+               Move_List  := Move_Vectors."&" (Move_List,
+                                               Move_Symmetry_Scan
+                                               (Position, -1, 2,
+                                                Stop_Short, Capture));
+              
+            when 'P' =>
+               
+               Stop_Short := True;
+               Capture    := Only;
+               Move_List  := Move_Vectors."&" (Move_List,
+                                               Move_Scan
+                                               (Position, -1, 1,
+                                                Stop_Short, Capture));
+               Move_List  := Move_Vectors."&" (Move_List,
+                                               Move_Symmetry_Scan
+                                               (Position, 1, 1,
+                                                Stop_Short, Capture));
+               Capture    := False;
+               Move_List  := Move_Vectors."&" (Move_List,
+                                               Move_Symmetry_Scan
+                                               (Position, 0, 1,
+                                                Stop_Short, Capture));
+               
+            when 'p' =>
+               
+               Stop_Short := True;
+               Capture    := Only;
+               Move_List  := Move_Vectors."&" (Move_List,
+                                               Move_Scan
+                                               (Position, -1, -1,
+                                                Stop_Short, Capture));
+               Move_List  := Move_Vectors."&" (Move_List,
+                                               Move_Symmetry_Scan
+                                               (Position, 1, -1,
+                                                Stop_Short, Capture));
+               Capture    := False;
+               Move_List  := Move_Vectors."&" (Move_List,
+                                               Move_Symmetry_Scan
+                                               (Position, 0, -1,
+                                                Stop_Short, Capture));
+               
+            when others =>
+               
+               raise Illegal_Move with "Invalid piece in move scan";
+               
+         end case;
+         
+         Position_Vectors.Next (Cursor);
+         
+      end loop;
+      
+      return Move_List;
+      
+   end Move_Generator;
    
-   
-   
-   
+               
    ----------------------------------------------------------------------------
    procedure Move_Piece (Move : in out Move_Type) is
       
@@ -338,122 +462,6 @@ package body Board is
    end Move_Symmetry_Scan;
    
 
-   ----------------------------------------------------------------------------
-   --  procedure Play_Game is
-      
-   --     Game_Won    : Boolean := False;
-      
-   --     Move_Cursor : Move_Vectors.Cursor;
-   --     Move_List   : Move_Vectors.Vector;
-      
-   --     --  Next_Board  : Board_State_Type;
-      
-   --  begin
-      
-   --     Move_List := Move_Scan;
-      
-   --     Move_Cursor := Move_Vectors.First (Move_List);
-      
-   --     if (not Move_Vectors.Has_Element (Move_Cursor)) then
-         
-   --        Game_Won := False;
-         
-   --     else
-         
-   --    Check_Moves:
-         
-   --        while (Move_Vectors.Has_Element (Move_Cursor) and (not Game_Won)) loop
-            
-   --           Move_Piece (Move_Vectors.Element (Move_Cursor));
-            
-   --           --  if (Evaluate_Win (Board_State.Side_On_Move,
-   --           --                    Next_Board) = True) then
-            
-   --           --     Game_Won := True;
-            
-   --           --  elsif (Next_Move (Next_Board) = -1) then  -- Negamax inversion here
-            
-   --           --     Game_Won := True;
-   --           --     exit Check_moves;
-            
-   --           --  end if;
-            
-   --           Move_Vectors.Next (Move_Cursor);   
-            
-   --        end loop Check_Moves;
-         
-   --     end if;
-      
-   --     if (Game_Won) then
-         
-   --        Put_Line ("1");
-         
-   --     else
-         
-   --        Put_Line ("-1");
-         
-   --     end if;
-      
-   --  end Play_Game;
-   
-   
-   --  ----------------------------------------------------------------------------
-   --  function Next_Move return Integer is
-      
-   --     Game_Won    : Boolean := False;
-      
-   --     Max_Value   : Integer := -1;
-   --     --  Next_Value  : Integer;
-      
-   --     Move_Cursor : Move_Vectors.Cursor;
-   --     Move_List   : Move_Vectors.Vector;
-      
-   --     --  Next_Board  : Board_State_Type;
-      
-   --  begin
-      
-   --     Move_List := Move_Scan;
-      
-   --     Move_Cursor := Move_Vectors.First (Move_List);
-      
-   --     if (not Move_Vectors.Has_Element (Move_Cursor)) then
-         
-   --        return -1;
-         
-   --     else
-         
-   --        while (Move_Vectors.Has_Element (Move_Cursor)) loop
-            
-   --           Move_Piece (Move_Vectors.Element (Move_Cursor));
-            
-   --           --  if (Evaluate_Win (Board_State.Side_On_Move,
-   --           --                    Next_Board) = True) then
-            
-   --           --     return 1;
-            
-   --           --  else
-            
-   --           --     Next_Value := -(Next_Move (Next_Board));  -- Negamax!
-               
-   --           --     if (Next_Value > Max_Value) then
-                  
-   --           --        Max_Value := Next_Value;
-                  
-   --           --     end if;
-
-   --           --  end if;
-            
-   --           Move_Vectors.Next (Move_Cursor);
-            
-   --        end loop;
-         
-   --        return Max_Value;
-         
-   --     end if;
-            
-   --  end Next_Move;
-    
-   
    ----------------------------------------------------------------------------
    procedure Print_Board is
       

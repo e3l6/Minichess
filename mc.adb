@@ -23,10 +23,7 @@ begin
       
    Put_Line ("Move list:");
    
-   Move_List := Move_Symmetry_Scan ((1, B), 1, 2, True);
-   
-   Move_List := Move_Vectors."&" (Move_List,
-                                  Move_Symmetry_Scan ((1, B), -1, 2, True));
+   Move_List := Move_Generator (White_Positions);
    
    Print_Move_List (Move_List);
    
@@ -38,6 +35,12 @@ begin
    
    Print_Position_Lists;
    
+   Put_Line ("Move list:");
+   
+   Move_List := Move_Generator (Black_Positions);
+   
+   Print_Move_List (Move_List);
+   
    Put_Line ("Move:");
    
    Move_Piece ("a5-a4");
@@ -48,11 +51,8 @@ begin
    
    Put_Line ("Move list:");
    
-   Move_List := Move_Symmetry_Scan ((3, C), 1, 2, True);
-   
-   Move_List := Move_Vectors."&" (Move_List,
-                                  Move_Symmetry_Scan ((3, C), -1, 2, True));
-   
+   Move_List := Move_Generator (White_Positions);
+     
    Print_Move_List (Move_List);
    
    Put_Line ("Move:");

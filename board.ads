@@ -10,10 +10,10 @@ with Ada.Containers.Vectors;  use Ada.Containers;
 
 package Board is
    
-   Illegal_Move     : exception;
-   
-   
    ----------------------------------------------------------------------------
+   -- Types
+   ----------------------------------------------------------------------------
+   
    subtype Board_Row_Type is Positive range 1 .. 6;
      
    type Board_Column_Type is (A, B, C, D, E);
@@ -43,41 +43,57 @@ package Board is
    
    type Capture_Type is (True, False, Only);
    
+   
    ----------------------------------------------------------------------------
+   -- Generic package instantiations
+   ----------------------------------------------------------------------------
+   
    package Position_Vectors is new Vectors (Positive, Board_Position_Type);
    package Move_Vectors     is new Vectors (Positive, Move_Type);
    
    
    ----------------------------------------------------------------------------
+   -- Package Globals
+   ----------------------------------------------------------------------------
+   
+   White_Positions : Position_Vectors.Vector;
+   Black_Positions : Position_Vectors.Vector;
+   Illegal_Move    : exception;
+   
+   
+   ----------------------------------------------------------------------------
+   -- Package functions and procedures
+   ----------------------------------------------------------------------------
+   
    procedure Initialize_Game;
    
-   procedure Move_Piece         (Move        : in out Move_Type);
-   procedure Move_Piece         (Move_string : in     String);
+   function  Move_Generator     (Position_List : in     Position_Vectors.vector)
+                                return Move_Vectors.Vector;
+
    
-   function  Move_Scan          (Position    : in     Board_Position_Type;
-                                 dx, dy      : in     Integer;
-                                 Stop_Short  : in     Boolean      := False;
-                                 Capture     : in     Capture_Type := True)
+   procedure Move_Piece         (Move          : in out Move_Type);
+   procedure Move_Piece         (Move_string   : in     String);
+   
+   function  Move_Scan          (Position      : in     Board_Position_Type;
+                                 dx, dy        : in     Integer;
+                                 Stop_Short    : in     Boolean      := False;
+                                 Capture       : in     Capture_Type := True)
                                 return Move_Vectors.Vector;
    
-   function  Move_Symmetry_Scan (Position    : in     Board_Position_Type;
-                                 dx, dy      : in     Integer;
-                                 Stop_Short  : in     Boolean      := False;
-                                 Capture     : in     Capture_Type := True)
+   function  Move_Symmetry_Scan (Position      : in     Board_Position_Type;
+                                 dx, dy        : in     Integer;
+                                 Stop_Short    : in     Boolean      := False;
+                                 Capture       : in     Capture_Type := True)
                                 return Move_Vectors.Vector;
     
-   --  procedure Play_Game;
-   
-   --  function  Next_Move      return Integer;
-   
    procedure Print_Board;
    
-   procedure Print_Move         (Piece       : in     Character;
-                                 Move        : in     Move_Type);
+   procedure Print_Move         (Piece         : in     Character;
+                                 Move          : in     Move_Type);
    
-   procedure Print_Move_List    (Move_List   : in     Move_Vectors.Vector);
+   procedure Print_Move_List    (Move_List     : in     Move_Vectors.Vector);
    
-   procedure Print_Position     (Position    : in     Board_Position_Type);
+   procedure Print_Position     (Position      : in     Board_Position_Type);
    
    procedure Print_Position_Lists;
    
