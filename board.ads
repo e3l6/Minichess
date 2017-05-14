@@ -53,12 +53,15 @@ package Board is
    
    
    ----------------------------------------------------------------------------
-   -- Package Globals
+   -- Package globals for external view
    ----------------------------------------------------------------------------
    
-   White_Positions : Position_Vectors.Vector;
-   Black_Positions : Position_Vectors.Vector;
-   Illegal_Move    : exception;
+   White_Score,
+   Black_Score      : Integer;
+   
+   White_Positions,
+   Black_Positions  : Position_Vectors.Vector;
+   Illegal_Move     : exception;
    
    
    ----------------------------------------------------------------------------
@@ -66,6 +69,8 @@ package Board is
    ----------------------------------------------------------------------------
    
    procedure Initialize_Game;
+   
+   procedure Evaluate_Score;
    
    function  Move_Generator     (Position_List : in     Position_Vectors.vector)
                                 return Move_Vectors.Vector;

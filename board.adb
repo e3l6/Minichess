@@ -62,6 +62,66 @@ package body Board is
    
    
    ----------------------------------------------------------------------------
+   procedure Evaluate_Score is
+      
+      Cursor     : Position_Vectors.Cursor;
+      Position   : Board_Position_Type;
+      
+   begin
+      
+      White_Score := 0;
+      Black_Score := 0;
+      
+      Cursor := Position_Vectors.First (White_Positions);
+      
+      while (Position_Vectors.Has_Element (Cursor)) loop
+         
+         Position := Position_Vectors.Element (Cursor);
+         
+         case Board_State.Board_Array(Position.R, Position.C) is
+            
+            when 'K' => null;
+            when 'Q' => White_Score := White_Score + 900;
+            when 'R' => White_Score := White_Score + 500;
+            when 'B' => White_Score := White_Score + 300;
+            when 'N' => White_Score := White_Score + 300;
+            when 'P' => White_Score := White_Score + 100;
+            when others => raise Illegal_Move with
+               "Invalid piece in score evaluation for white";
+               
+         end case;
+         
+         Position_Vectors.Next (Cursor);
+         
+      end loop;
+      
+      Cursor := Position_Vectors.First (Black_Positions);
+      
+      while (Position_Vectors.Has_Element (Cursor)) loop
+         
+         Position := Position_Vectors.Element (Cursor);
+         
+         case Board_State.Board_Array(Position.R, Position.C) is
+            
+            when 'k' => null;
+            when 'q' => Black_Score := Black_Score + 900;
+            when 'r' => Black_Score := Black_Score + 500;
+            when 'b' => Black_Score := Black_Score + 300;
+            when 'n' => Black_Score := Black_Score + 300;
+            when 'p' => Black_Score := Black_Score + 100;
+            when others => raise Illegal_Move with
+               "Invalid piece in score evaluation for black";
+               
+         end case;
+         
+         Position_Vectors.Next (Cursor);
+         
+      end loop;
+      
+   end Evaluate_Score;
+   
+   
+   ----------------------------------------------------------------------------
    function Move_Generator (Position_List : in     Position_Vectors.vector)
                            return Move_Vectors.Vector is
       
@@ -298,6 +358,8 @@ package body Board is
       
       Board_State.Board_Array(Move.From.R, Move.From.C) := '.';
       
+      Evaluate_Score;
+      
    end Move_Piece;
 
 
@@ -476,15 +538,21 @@ package body Board is
          
          for C in Board_Column_Type'Range loop
             
-            Put (Standard_Error, Board_State.Board_Array(R, C));
+            Put (Standard_Output, Board_State.Board_Array(R, C));
             
          end loop;  -- Row
          
-         New_Line (Standard_Error);
+         New_Line (Standard_Output);
          
       end loop;  -- Col
       
-      New_Line (Standard_Error);
+      New_Line (Standard_Output);
+      
+      Put ("White score: ");
+      Put (White_Score, 0);
+      Put (" Black score: ");
+      Put (Black_Score, 0);
+      New_Line;
       
    end Print_Board;
    
@@ -638,6 +706,8 @@ package body Board is
             Board_State.Side_On_Move := W;
             
          end if;
+         
+         Evaluate_Score;
          
       end if;
       
