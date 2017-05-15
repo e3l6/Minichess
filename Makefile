@@ -1,10 +1,10 @@
 # Eric Laursen, 31 May 2017, CS 442P-003 Term Project
 # Makefile for Minichess - A minichess player
 
-OBJS = mc.o board.o
+OBJS = mc.o board.o negamax.o
 
 .adb.o:
-	gcc -c -gnat2012 -O3 $<
+	gcc -c -gnat2012 -g $<
 
 .SUFFIXES: .adb .o
 

@@ -7,34 +7,40 @@
 -------------------------------------------------------------------------------
 
 with Ada.Characters.Handling; use Ada.Characters.Handling;
-with Ada.Integer_Text_IO;  use Ada.Integer_Text_IO;
-with Ada.Strings.Maps;     use Ada.Strings.Maps;
-with Ada.Text_IO;          use Ada.Text_IO;
+with Ada.Integer_Text_IO;     use Ada.Integer_Text_IO;
+with Ada.Text_IO;             use Ada.Text_IO;
 
 package body Board is
    
-   White_Piece_Set : Character_Set := To_Set ("BKNPRQ");
-   Black_Piece_Set : Character_Set := To_Set ("bknprq");
-   
-   Board_State     : Board_State_Type;
-   
-   Game_Log        : Move_Vectors.Vector;
-   
+   Illegal_Move    : exception;
+
    ----------------------------------------------------------------------------
    procedure Initialize_Game is
       
    begin
       
-      Board_State.Turn_Counter := 1;
-      Board_State.Side_On_Move := W;
+      --  Game_State.Turn_Counter := 1;
+      --  Game_State.Side_On_Move := W;
       
-      Board_State.Board_Array :=
-        new Board_Array_Type'(('R', 'N', 'B', 'Q', 'K'),
-                              ('P', 'P', 'P', 'P', 'P'),
-                              ('.', '.', '.', '.', '.'),
-                              ('.', '.', '.', '.', '.'),
-                              ('p', 'p', 'p', 'p', 'p'),
-                              ('k', 'q', 'b', 'n', 'r'));
+      --  Game_State.Board_Array := (('R', 'N', 'B', 'Q', 'K'),
+      --                             ('P', 'P', 'P', 'P', 'P'),
+      --                             ('.', '.', '.', '.', '.'),
+      --                             ('.', '.', '.', '.', '.'),
+      --                             ('p', 'p', 'p', 'p', 'p'),
+      --                             ('k', 'q', 'b', 'n', 'r'));
+      
+      Game_State.Turn_Counter := 30;
+      Game_State.Side_On_Move := W;
+      
+      Game_State.Board_Array := (('.', '.', '.', 'K', '.'),
+                                 ('.', '.', '.', '.', '.'),
+                                 ('.', 'Q', '.', '.', '.'),
+                                 ('.', 'p', '.', '.', '.'),
+                                 ('.', 'k', '.', '.', '.'),
+                                 ('.', '.', '.', '.', '.'));
+      
+      White_Piece_Set := To_Set ("BKNPRQ");
+      Black_Piece_Set := To_Set ("bknprq");
       
       -- Scan the board and populate the position vectors for each player
       
@@ -42,15 +48,15 @@ package body Board is
          
          for C in Board_Column_Type'Range loop
             
-            if (Is_In (Board_State.Board_Array(R, C), White_Piece_Set)) then
+            if (Is_In (Game_State.Board_Array(R, C), White_Piece_Set)) then
                
-               Position_Vectors.Append (White_Positions, (R, C));
+               Position_Vectors.Append (Game_State.White_Positions, (R, C));
                
             end if;
             
-            if (Is_In (Board_State.Board_Array(R,C), Black_Piece_Set)) then
+            if (Is_In (Game_State.Board_Array(R,C), Black_Piece_Set)) then
                
-               Position_Vectors.Append (Black_Positions, (R, C));
+               Position_Vectors.Append (Game_State.Black_Positions, (R, C));
                
             end if;
             
@@ -58,35 +64,54 @@ package body Board is
          
       end loop;
       
+      -- Set initial score
+      
+      Evaluate_Score (Game_State);
+      
    end;
    
    
    ----------------------------------------------------------------------------
-   procedure Evaluate_Score is
+   procedure Evaluate_Score (State : in out Game_State_Type) is
       
-      Cursor     : Position_Vectors.Cursor;
-      Position   : Board_Position_Type;
+      Cursor       : Position_Vectors.Cursor;
+      Position     : Board_Position_Type;
+      
+      White_Score,
+      Black_Score  : Integer := 0;
       
    begin
       
-      White_Score := 0;
-      Black_Score := 0;
+      State.Score := 0;
       
-      Cursor := Position_Vectors.First (White_Positions);
+      Cursor := Position_Vectors.First (State.White_Positions);
       
       while (Position_Vectors.Has_Element (Cursor)) loop
          
          Position := Position_Vectors.Element (Cursor);
          
-         case Board_State.Board_Array(Position.R, Position.C) is
+         case State.Board_Array(Position.R, Position.C) is
             
-            when 'K' => null;
-            when 'Q' => White_Score := White_Score + 900;
-            when 'R' => White_Score := White_Score + 500;
-            when 'B' => White_Score := White_Score + 300;
-            when 'N' => White_Score := White_Score + 300;
-            when 'P' => White_Score := White_Score + 100;
-            when others => raise Illegal_Move with
+            when 'K' => 
+               null;
+               
+            when 'Q' => 
+               White_Score := White_Score + 900;
+               
+            when 'R' => 
+               White_Score := White_Score + 500;
+               
+            when 'B' => 
+               White_Score := White_Score + 300;
+               
+            when 'N' => 
+               White_Score := White_Score + 300;
+               
+            when 'P' => 
+               White_Score := White_Score + 100;
+               
+            when others => 
+               raise Illegal_Move with
                "Invalid piece in score evaluation for white";
                
          end case;
@@ -95,22 +120,35 @@ package body Board is
          
       end loop;
       
-      Cursor := Position_Vectors.First (Black_Positions);
+      Cursor := Position_Vectors.First (State.Black_Positions);
       
       while (Position_Vectors.Has_Element (Cursor)) loop
          
          Position := Position_Vectors.Element (Cursor);
          
-         case Board_State.Board_Array(Position.R, Position.C) is
+         case State.Board_Array(Position.R, Position.C) is
             
-            when 'k' => null;
-            when 'q' => Black_Score := Black_Score + 900;
-            when 'r' => Black_Score := Black_Score + 500;
-            when 'b' => Black_Score := Black_Score + 300;
-            when 'n' => Black_Score := Black_Score + 300;
-            when 'p' => Black_Score := Black_Score + 100;
-            when others => raise Illegal_Move with
-               "Invalid piece in score evaluation for black";
+            when 'k' => 
+               null;
+               
+            when 'q' => 
+               Black_Score := Black_Score + 900;
+               
+            when 'r' => 
+               Black_Score := Black_Score + 500;
+               
+            when 'b' => 
+               Black_Score := Black_Score + 300;
+               
+            when 'n' => 
+               Black_Score := Black_Score + 300;
+               
+            when 'p' => 
+               Black_Score := Black_Score + 100;
+               
+            when others => 
+               raise Illegal_Move with
+                 "Invalid piece in score evaluation for black";
                
          end case;
          
@@ -118,11 +156,38 @@ package body Board is
          
       end loop;
       
+      if (State.Side_On_Move = W) then
+         
+         if (State.White_King_In_Play = True) then
+            
+            State.Score := White_Score - Black_Score;
+            
+         else
+            
+            State.Score := -10_000;
+            
+         end if;
+         
+      else
+         
+         if (State.Black_King_In_Play = True) then
+            
+            State.Score := Black_Score - White_Score;
+            
+         else
+            
+            State.Score := -10_000;
+            
+         end if;
+         
+      end if;
+      
    end Evaluate_Score;
    
    
    ----------------------------------------------------------------------------
-   function Move_Generator (Position_List : in     Position_Vectors.vector)
+   function Move_Generator (State         : in     Game_State_Type;
+                            Position_List : in     Position_Vectors.vector)
                            return Move_Vectors.Vector is
       
       Cursor     : Position_Vectors.Cursor;
@@ -139,7 +204,7 @@ package body Board is
          
          Position := Position_Vectors.Element (Cursor);
          
-         case Board_State.Board_Array(Position.R, Position.C) is
+         case State.Board_Array(Position.R, Position.C) is
             
             when 'K' | 'k' =>
                
@@ -147,24 +212,24 @@ package body Board is
                Capture    := True;
                Move_List  := Move_Vectors."&" (Move_List,
                                                Move_Symmetry_Scan
-                                               (Position, 0, 1,
+                                               (State, Position, 1, 0,
                                                 Stop_Short, Capture));
                Move_List  := Move_Vectors."&" (Move_List,
                                                Move_Symmetry_Scan
-                                               (Position, 1, 1,
+                                               (State, Position, 1, 1,
                                                 Stop_Short, Capture));
-      
+               
             when 'Q' | 'q' =>
                
                Stop_Short := False;
                Capture    := True;
                Move_List  := Move_Vectors."&" (Move_List,
                                                Move_Symmetry_Scan
-                                               (Position, 0, 1,
+                                               (State, Position, 1, 0,
                                                 Stop_Short, Capture));
                Move_List  := Move_Vectors."&" (Move_List,
                                                Move_Symmetry_Scan
-                                               (Position, 1, 1,
+                                               (State, Position, 1, 1,
                                                 Stop_Short, Capture));
             when 'R' | 'r' =>
                
@@ -172,7 +237,7 @@ package body Board is
                Capture    := True;
                Move_List  := Move_Vectors."&" (Move_List,
                                                Move_Symmetry_Scan
-                                               (Position, 0, 1,
+                                               (State, Position, 1, 0,
                                                 Stop_Short, Capture));
                
             when 'B' | 'b' =>
@@ -181,13 +246,13 @@ package body Board is
                Capture    := False;
                Move_List  := Move_Vectors."&" (Move_List,
                                                Move_Symmetry_Scan
-                                               (Position, 0, 1,
+                                               (State, Position, 1, 0,
                                                 Stop_Short, Capture));
                Stop_Short := False;
                Capture    := True;
                Move_List  := Move_Vectors."&" (Move_List,
                                                Move_Symmetry_Scan
-                                               (Position, 1, 1,
+                                               (State, Position, 1, 1,
                                                 Stop_Short, Capture)); 
                
             when 'N' | 'n' =>
@@ -196,11 +261,11 @@ package body Board is
                Capture    := True;
                Move_List  := Move_Vectors."&" (Move_List,
                                                Move_Symmetry_Scan
-                                               (Position, 1, 2,
+                                               (State, Position, 2, 1,
                                                 Stop_Short, Capture));
                Move_List  := Move_Vectors."&" (Move_List,
                                                Move_Symmetry_Scan
-                                               (Position, -1, 2,
+                                               (State, Position, 2, -1,
                                                 Stop_Short, Capture));
               
             when 'P' =>
@@ -209,16 +274,16 @@ package body Board is
                Capture    := Only;
                Move_List  := Move_Vectors."&" (Move_List,
                                                Move_Scan
-                                               (Position, -1, 1,
+                                               (State, Position, 1, -1,
                                                 Stop_Short, Capture));
                Move_List  := Move_Vectors."&" (Move_List,
-                                               Move_Symmetry_Scan
-                                               (Position, 1, 1,
+                                               Move_Scan
+                                               (State, Position, 1, 1,
                                                 Stop_Short, Capture));
                Capture    := False;
                Move_List  := Move_Vectors."&" (Move_List,
-                                               Move_Symmetry_Scan
-                                               (Position, 0, 1,
+                                               Move_Scan
+                                               (State, Position, 1, 0,
                                                 Stop_Short, Capture));
                
             when 'p' =>
@@ -227,16 +292,16 @@ package body Board is
                Capture    := Only;
                Move_List  := Move_Vectors."&" (Move_List,
                                                Move_Scan
-                                               (Position, -1, -1,
+                                               (State, Position, -1, -1,
                                                 Stop_Short, Capture));
                Move_List  := Move_Vectors."&" (Move_List,
-                                               Move_Symmetry_Scan
-                                               (Position, 1, -1,
+                                               Move_Scan
+                                               (State, Position, -1, 1,
                                                 Stop_Short, Capture));
                Capture    := False;
                Move_List  := Move_Vectors."&" (Move_List,
-                                               Move_Symmetry_Scan
-                                               (Position, 0, -1,
+                                               Move_Scan
+                                               (State, Position, -1, 0,
                                                 Stop_Short, Capture));
                
             when others =>
@@ -253,9 +318,10 @@ package body Board is
       
    end Move_Generator;
    
-               
+   
    ----------------------------------------------------------------------------
-   procedure Move_Piece (Move : in out Move_Type) is
+   procedure Move_Piece (State : in out Game_State_Type;
+                         Move  : in out Move_Type) is
       
       Cursor : Position_Vectors.Cursor;
       
@@ -268,17 +334,15 @@ package body Board is
       --   side on move and the "capture piece". If an actual piece was
       --   captured, remove it from the opposing player's position list.
       
-      if (Board_State.Side_On_Move = W) then
+      if (State.Side_On_Move = W) then
          
-         if (not Is_In (Board_State.Board_Array(Move.From.R, Move.From.C),
-                        White_Piece_Set)) then
+         if (not Is_In (Move.piece, White_Piece_Set)) then
             
             raise Illegal_Move with "Origin piece not owned by side on move";
             
          end if;
          
-         if (Is_In (Board_State.Board_Array(Move.To.R, Move.To.C),
-                    White_Piece_Set)) then
+         if (Is_In (Move.Capture, White_Piece_Set)) then
             
             raise Illegal_Move with "White attempting to capture own piece";
             
@@ -286,37 +350,41 @@ package body Board is
          
          -- Update the positions lists
          
-         Cursor := Position_Vectors.Find  (White_Positions,
+         Cursor := Position_Vectors.Find  (State.White_Positions,
                                            Move.From);
-         Position_Vectors.Replace_Element (White_Positions,
+         Position_Vectors.Replace_Element (State.White_Positions,
                                            Cursor,
                                            Move.To);
          
-         Move.Capture := Board_State.Board_Array(Move.To.R, Move.To.C);
+         Move.Capture := State.Board_Array(Move.To.R, Move.To.C);
          
          if (Move.Capture /= '.') then
             
-            Cursor := Position_Vectors.Find (Black_Positions,
+            if (Move.Capture = 'k') then
+               
+               State.Black_King_In_Play := False;
+               
+            end if;
+            
+            Cursor := Position_Vectors.Find (State.Black_Positions,
                                              Move.To);
-            Position_Vectors.Delete         (Black_Positions,
+            Position_Vectors.Delete         (State.Black_Positions,
                                              Cursor);
          end if;
          
          -- Change the side on move
          
-         Board_State.Side_On_Move := B;
+         State.Side_On_Move := B;
          
       else
          
-         if (not Is_In (Board_State.Board_Array(Move.From.R, Move.From.C),
-                        Black_Piece_Set)) then
+         if (not Is_In (Move.Piece, Black_Piece_Set)) then
             
             raise Illegal_Move with "Origin piece not owned by side on move";
             
          end if;
          
-         if (Is_In (Board_State.Board_Array(Move.To.R, Move.To.C),
-                    Black_Piece_Set)) then
+         if (Is_In (Move.Capture, Black_Piece_Set)) then
             
             raise Illegal_Move with "Black attempting to capture own piece";
             
@@ -324,47 +392,54 @@ package body Board is
          
          -- Update the positions lists
          
-         Cursor := Position_Vectors.Find  (Black_Positions,
+         Cursor := Position_Vectors.Find  (State.Black_Positions,
                                            Move.From);
-         Position_Vectors.Replace_Element (Black_Positions,
+         Position_Vectors.Replace_Element (State.Black_Positions,
                                            Cursor,
                                            Move.To);
          
-         Move.Capture := Board_State.Board_Array(Move.To.R, Move.To.C);
+         Move.Capture := State.Board_Array(Move.To.R, Move.To.C);
          
          if (Move.Capture /= '.') then
             
-            Cursor := Position_Vectors.Find (White_Positions,
+            if (Move.Capture = 'K') then
+               
+               State.White_King_In_Play := False;
+               
+            end if;
+            
+            Cursor := Position_Vectors.Find (State.White_Positions,
                                              Move.To);
-            Position_Vectors.Delete         (White_Positions,
+            Position_Vectors.Delete         (State.White_Positions,
                                              Cursor);
          end if;
          
          -- Increment the turn counter and change the side on move.
          
-         Board_State.Turn_Counter := Board_State.Turn_Counter + 1;
-         Board_State.Side_On_Move := W;
+         State.Turn_Counter := State.Turn_Counter + 1;
+         State.Side_On_Move := W;
          
       end if;
       
       -- Log the move in the running game log
       
-      Move_Vectors.Append (Game_Log, Move);
+      Move_Vectors.Append (State.Move_Log, Move);
       
       -- Move the piece to the new position and clear the new position
       
-      Board_State.Board_Array(Move.To.R, Move.To.C) :=
-        Board_State.Board_Array(Move.From.R, Move.From.C);
+      State.Board_Array(Move.To.R, Move.To.C) :=
+        State.Board_Array(Move.From.R, Move.From.C);
       
-      Board_State.Board_Array(Move.From.R, Move.From.C) := '.';
+      State.Board_Array(Move.From.R, Move.From.C) := '.';
       
-      Evaluate_Score;
+      Evaluate_Score (State);
       
    end Move_Piece;
 
 
    ----------------------------------------------------------------------------
-   procedure Move_Piece (Move_String : in     String) is
+   procedure Move_Piece (State       : in out Game_State_Type;
+                         Move_String : in     String) is
       
       Element : String (1 .. 1);
       Move    : Move_Type;
@@ -386,12 +461,12 @@ package body Board is
       Element(1)  := Move_String(Move_String'First + 4);
       Move.To.R   := Positive'Value (Element);
       
-      Move.Capture := '.';
+      Move.Piece   := State.Board_Array(Move.From.R, Move.From.C);
+      Move.Capture := State.Board_Array(Move.To.R,   Move.To.C);
       
-      Move_Piece (Move);
+      Move_Piece (Game_State, Move);
       
-      Print_Move (Board_State.Board_Array(Move.To.R, Move.To.C),
-                  Move);
+      Print_Move (Move);
       
       New_Line (2);
       
@@ -399,7 +474,8 @@ package body Board is
    
    
    ----------------------------------------------------------------------------
-   function Move_Scan (Position   : in     Board_Position_Type;
+   function Move_Scan (State      : in     Game_State_Type;
+                       Position   : in     Board_Position_Type;
                        dx, dy     : in     Integer;
                        Stop_Short : in     Boolean      := False;
                        Capture    : in     Capture_Type := True)
@@ -408,7 +484,8 @@ package body Board is
       Move_List : Move_Vectors.Vector;
       X, Y      : Integer;
       Stop_Flag : Boolean := Stop_Short;
-      Piece     : Character;             -- The contents of 
+      Piece     : Character;             -- Piece being moved
+      Cap_Piece : Character;             -- The contents of 
                                          --   Board_Array(X + dx, Y + dy)
 
    begin
@@ -419,7 +496,9 @@ package body Board is
       
       X     := Position.R;
       Y     := Board_Column_Type'Pos (Position.C);
-            
+      
+      Piece := State.Board_Array(X, Board_Column_Type'Val (Y));
+      
   Scan_Loop :
       loop
          
@@ -435,13 +514,13 @@ package body Board is
             
          end if;
          
-         Piece := Board_State.Board_Array(X, Board_Column_Type'Val (Y));
+         Cap_Piece := State.Board_Array(X, Board_Column_Type'Val (Y));
          
-         if (Piece /= '.') then                         -- We found a piece
+         if (Cap_Piece /= '.') then                         -- We found a piece
             
-            if (Board_State.Side_On_Move = W) then      -- Check to see if it's
-                                                        --   one of ours. If so
-               if (Is_In (Piece, White_Piece_Set)) then --   exit the scan loop
+            if (State.Side_On_Move = W) then                -- Check to see if it's
+                                                            --   one of ours. If so
+               if (Is_In (Cap_Piece, White_Piece_Set)) then --   exit the scan loop
                   
                   exit Scan_Loop;
                   
@@ -449,7 +528,7 @@ package body Board is
                
             else
                
-               if (Is_In (Piece, Black_Piece_Set)) then
+               if (Is_In (Cap_Piece, Black_Piece_Set)) then
                   
                   exit Scan_Loop;
                   
@@ -478,7 +557,7 @@ package body Board is
          Move_Vectors.Append (Move_List,
                               (Position,
                                (X, Board_Column_Type'Val (Y)),
-                               Piece));
+                               Piece, Cap_Piece));         
          
          exit Scan_Loop when (Stop_Flag = True);
          
@@ -490,7 +569,8 @@ package body Board is
    
    
    ----------------------------------------------------------------------------
-   function Move_Symmetry_Scan (Position    : in     Board_Position_Type;
+   function Move_Symmetry_Scan (State       : in     Game_State_Type;
+                                Position    : in     Board_Position_Type;
                                 dx, dy      : in     Integer;
                                 Stop_Short  : in     Boolean      := False;
                                 Capture     : in     Capture_Type := True)
@@ -510,7 +590,9 @@ package body Board is
       for I in 1 .. 4 loop
          
          Move_List := Move_Vectors."&" (Move_List, 
-                                        Move_Scan (Position, Loop_dx, Loop_dy,
+                                        Move_Scan (State,
+                                                   Position,
+                                                   Loop_dx, Loop_dy,
                                                    Stop_Short, Capture));
          
          Tmp_dy  := Loop_dx;
@@ -525,20 +607,20 @@ package body Board is
    
 
    ----------------------------------------------------------------------------
-   procedure Print_Board is
+   procedure Print_Board (State : in     Game_State_Type) is
       
    begin
       
-      Put      (Standard_Output, Board_State.Turn_Counter, 0);
+      Put      (Standard_Output, State.Turn_Counter, 0);
       Put      (Standard_Output, " ");
       Put_Line (Standard_Output,
-                Side_On_Move_Type'Image (Board_State.Side_On_Move));
+                Side_On_Move_Type'Image (State.Side_On_Move));
       
       for R in reverse Board_Row_Type'Range loop
          
          for C in Board_Column_Type'Range loop
             
-            Put (Standard_Output, Board_State.Board_Array(R, C));
+            Put (Standard_Output, State.Board_Array(R, C));
             
          end loop;  -- Row
          
@@ -548,22 +630,19 @@ package body Board is
       
       New_Line (Standard_Output);
       
-      Put ("White score: ");
-      Put (White_Score, 0);
-      Put (" Black score: ");
-      Put (Black_Score, 0);
+      Put ("Score: ");
+      Put (State.Score, 0);
       New_Line;
       
    end Print_Board;
    
    
    ----------------------------------------------------------------------------
-   procedure Print_Move (Piece : in     Character;
-                         Move  : in     Move_Type) is
+   procedure Print_Move (Move  : in     Move_Type) is
       
    begin
       
-      Put (Piece);
+      Put (Move.Piece);
       Put (" ");
       Print_Position (Move.From);
       Put ('-');
@@ -592,8 +671,7 @@ package body Board is
          
          Move := Move_Vectors.Element (Cursor);
          
-         Print_Move (Board_State.Board_Array(Move.From.R, Move.From.C),
-                                             Move);
+         Print_Move (Move);
          
          New_Line (1);
          
@@ -608,7 +686,7 @@ package body Board is
    
    ----------------------------------------------------------------------------
    procedure Print_Position (Position : in     Board_Position_Type) is
-       
+      
    begin
       
       Put (Standard_Output, To_Lower (Board_Column_Type'Image (Position.C)));
@@ -618,20 +696,20 @@ package body Board is
    
    
    ----------------------------------------------------------------------------
-   procedure Print_Position_Lists is
+   procedure Print_Position_Lists (State : in     Game_State_Type) is
       
       Position_Cursor : Position_Vectors.Cursor;
       Position        : Board_Position_Type;
       
    begin
       
-      Position_Cursor := Position_Vectors.First (White_Positions);
+      Position_Cursor := Position_Vectors.First (State.White_Positions);
       
       while (Position_Vectors.Has_Element (Position_Cursor)) loop
          
          Position := Position_Vectors.Element (Position_Cursor);
          
-         Put (Board_State.Board_Array (Position.R, Position.C) & " ");
+         Put (State.Board_Array(Position.R, Position.C) & " ");
          
          Print_Position (Position);
          
@@ -643,13 +721,13 @@ package body Board is
       
       New_Line;
       
-      Position_Cursor := Position_Vectors.First (Black_Positions);
+      Position_Cursor := Position_Vectors.First (State.Black_Positions);
       
       while (Position_Vectors.Has_Element (Position_Cursor)) loop
          
          Position := Position_Vectors.Element (Position_Cursor);
          
-         Put (Board_State.Board_Array (Position.R, Position.C) & " ");
+         Put (State.Board_Array (Position.R, Position.C) & " ");
          
          Print_Position (Position);
          
@@ -665,14 +743,15 @@ package body Board is
    
    
    ----------------------------------------------------------------------------
-   procedure Undo_Move is
+   procedure Undo_Move (State : in out Game_State_Type) is
       
       Old_Move : Move_Type;
+      Cursor   : Position_Vectors.Cursor;
       
    begin
       
-      if (Board_State.Turn_Counter = 1) and then 
-        (Board_State.Side_On_Move = W) then
+      if (State.Turn_Counter = 1) and then 
+        (State.Side_On_Move = W) then
          
          Put_Line (Standard_Error, "Attempting to undo with no moves in log");
          
@@ -680,38 +759,88 @@ package body Board is
          
       else
          
-         Old_Move := Move_Vectors.Last_Element (Game_Log);
+         Old_Move := Move_Vectors.Last_Element (State.Move_Log);
          
          -- Move the piece back to its origin, and replace the captured piece
          
-         Board_State.Board_Array (Old_Move.From.R, Old_Move.From.C) :=
-           Board_State.Board_Array (Old_Move.To.R, Old_Move.To.C);
+         State.Board_Array (Old_Move.From.R, Old_Move.From.C) :=
+           Old_Move.Piece;
          
-         Board_State.Board_Array (Old_Move.To.R, Old_Move.To.C) :=
+         State.Board_Array (Old_Move.To.R, Old_Move.To.C) :=
            Old_Move.Capture;
          
          -- Remove the move from the game log
          
-         Move_Vectors.Delete_Last (Game_Log);
+         Move_Vectors.Delete_Last (State.Move_Log);
          
          -- Update the move counter and side on move
          
-         if (Board_State.Side_On_Move = W) then
+         if (State.Side_On_Move = W) then
             
-            Board_State.Turn_Counter := Board_State.Turn_Counter - 1;
-            Board_State.Side_On_Move := B;
+            State.Turn_Counter := State.Turn_Counter - 1;
+            State.Side_On_Move := B;
+            
+            -- Update the positions lists
+            
+            Cursor := Position_Vectors.Find  (State.Black_Positions,
+                                              Old_Move.To);
+            
+            if (Position_Vectors.Has_Element (Cursor)) then
+               
+               Position_Vectors.Replace_Element (State.Black_Positions,
+                                                 Cursor,
+                                                 Old_Move.From);
+               
+               if (Old_Move.Capture /= '.') then
+                  
+                  Position_Vectors.append (State.White_Positions,
+                                           Old_Move.To);
+               end if;
+               
+            end if;
+            
+            if (Old_Move.Capture = 'K') then
+               
+               State.White_King_In_Play := True;
+               
+            end if;
             
          else
             
-            Board_State.Side_On_Move := W;
+            State.Side_On_Move := W;
+            
+            -- Update the positions lists
+            
+            Cursor := Position_Vectors.Find  (State.White_Positions,
+                                              Old_Move.To);
+            
+            if (Position_Vectors.Has_Element (Cursor)) then
+               
+               Position_Vectors.Replace_Element (State.White_Positions,
+                                                 Cursor,
+                                                 Old_Move.From);
+               
+               if (Old_Move.Capture /= '.') then
+                  
+                  Position_Vectors.append (State.Black_Positions,
+                                           Old_Move.To);
+               end if;
+               
+            end if;
+            
+            if (Old_Move.Capture = 'k') then
+               
+               State.Black_King_In_Play := True;
+               
+            end if;
             
          end if;
          
-         Evaluate_Score;
+         Evaluate_Score (State);
          
       end if;
       
-   end;   
+   end Undo_Move;
    
    
 end Board;
