@@ -10,11 +10,13 @@ with Board; use Board;
 
 package Negamax is
    
-   Max_Depth : Integer := 4;
+   Max_Depth : Integer := 8;
    
    
-   function Negamax (State : in out Game_State_Type;
-                     Depth : in     Integer)
+   function Negamax (State     : in out Game_State_Type;
+                     Depth     : in     Integer;
+                     Alpha,
+                     Beta      : in     Integer)
                     return Integer;
    
 end Negamax;

@@ -11,8 +11,10 @@ with Ada.Integer_Text_IO;  use Ada.Integer_Text_IO;
 
 package body Negamax is
    
-   function Negamax (State : in out Game_State_Type;
-                     Depth : in     Integer)
+   function Negamax (State     : in out Game_State_Type;
+                     Depth     : in     Integer;
+                     Alpha,
+                     Beta      : in     Integer)
                     return integer is
       
       Move_Cursor : Move_Vectors.Cursor;
@@ -22,16 +24,17 @@ package body Negamax is
       Best_Score,
       Nega_Score  : Integer;
       
+      Local_Alpha : Integer := Alpha;
+      Local_Beta  : Integer := Beta;
+      
    begin
       
-      Best_Score  := State.Score;
+      Evaluate_Score (State);
       
-      if ((Depth <= 0) or (State.Turn_Counter > 40)) then
+      if ((Depth <= 0) or
+          ((State.Turn_Counter = 40) and (State.Side_On_Move = B))) then
          
-         Put_Line ("Max depth reached. Backing out");
-         New_Line;
-         
-         return (Best_Score);
+         return (State.Score);
          
       end if;
       
@@ -39,57 +42,51 @@ package body Negamax is
          
          if (State.White_King_In_Play = False) then
             
-            return -10_000;
+            return Integer'First + 1;
             
          end if;
          
-         Move_List   := Move_Generator (State, State.White_Positions);
+         Move_List := Move_Generator (State, State.White_Positions);
          
       else
          
          if (State.Black_King_In_Play = False) then
             
-            return -10_000;
+            return Integer'First + 1;
             
          end if;
          
-         Move_List   := Move_Generator (State, State.Black_Positions);
+         Move_List := Move_Generator (State, State.Black_Positions);
          
       end if;
       
+      Best_Score  := Integer'First + 1;
       Move_Cursor := Move_Vectors.First (Move_List);
       
+  Child_Search_Loop :
       while (Move_Vectors.Has_Element (Move_Cursor)) loop
          
          Move := Move_Vectors.Element (Move_Cursor);
          
          Move_Piece (State, Move);
          
-         Put ("SOM: " & Side_On_Move_Type'Image (State.Side_On_Move) & "  D:");
-         Put (Depth, 0);
-         Put ("  ");
-         Put (State.Score, 5);
-         Put (": ");
-         Print_Move (Move);
-         New_Line (2);
-         
-         Print_Board (State);
-         
-         Nega_Score := - Negamax (State, Depth - 1);
-         
-         Best_Score := Integer'Max (Best_Score, Nega_Score);
-         
-         Put ("Best score : ");
-         Put (Best_Score, 0);
-         Put ("  Nega score : ");
-         Put (Nega_Score, 0);
-         New_Line;
+         Nega_Score := - Negamax (State, Depth - 1,
+                                  - Local_Beta, - Local_Alpha);
          
          Undo_Move (State);
          
+         Best_Score  := Integer'Max (Best_Score,  Nega_Score);
+         Local_Alpha := Integer'Max (Local_Alpha, Nega_Score);
+         
+         if (Local_Alpha >= Local_Beta) then
+            
+            exit Child_Search_Loop;
+            
+         end if;
+         
          Move_Vectors.Next (Move_Cursor);
          
-      end loop;
+      end loop Child_Search_Loop;
       
       return Best_Score;   
       

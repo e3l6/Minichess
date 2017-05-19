@@ -19,7 +19,10 @@ procedure MC is
    Move        : Move_Type;
    
    Best_Score,
-   Nega_Score  : Integer := -10_000;
+   Nega_Score  : Integer := Integer'First + 1;
+   
+   Alpha       : Integer := Integer'First + 1; 
+   Beta        : Integer := Integer'Last;
    
    Position    : Board_Position_Type := (2, A);
    
@@ -31,8 +34,7 @@ begin
    
    New_Line;
    
-   --  Move_Piece (Game_State, "b2-b3");
-   
+   --  Move_Piece  (Game_State, "b2-b3");
    --  Print_Board (Game_State);
    
    Put_Line ("Move list:");
@@ -52,9 +54,14 @@ begin
       
       Move_Piece (Game_State, Move);
       
-      Print_Board (Game_State);
+      Nega_Score := - Negamax.Negamax (Game_State, Max_Depth,
+                                       Integer'First + 1, Integer'Last);
       
-      Nega_Score := - Negamax.Negamax (Game_State, 4);
+      if (Best_Score > Nega_Score) then
+         
+         Best_Move := Move;
+         
+      end if;
       
       Best_Score := Integer'Max (Best_Score, Nega_Score);
       
@@ -64,6 +71,7 @@ begin
       
    end loop;
    
+      
    Put ("Best score: ");
    Put (Best_Score, 0);
    Put ("  ");

@@ -19,25 +19,15 @@ package body Board is
       
    begin
       
-      --  Game_State.Turn_Counter := 1;
-      --  Game_State.Side_On_Move := W;
-      
-      --  Game_State.Board_Array := (('R', 'N', 'B', 'Q', 'K'),
-      --                             ('P', 'P', 'P', 'P', 'P'),
-      --                             ('.', '.', '.', '.', '.'),
-      --                             ('.', '.', '.', '.', '.'),
-      --                             ('p', 'p', 'p', 'p', 'p'),
-      --                             ('k', 'q', 'b', 'n', 'r'));
-      
-      Game_State.Turn_Counter := 30;
+      Game_State.Turn_Counter := 1;
       Game_State.Side_On_Move := W;
       
-      Game_State.Board_Array := (('.', '.', '.', 'K', '.'),
+      Game_State.Board_Array := (('R', 'N', 'B', 'Q', 'K'),
+                                 ('P', 'P', 'P', 'P', 'P'),
                                  ('.', '.', '.', '.', '.'),
-                                 ('.', 'Q', '.', '.', '.'),
-                                 ('.', 'p', '.', '.', '.'),
-                                 ('.', 'k', '.', '.', '.'),
-                                 ('.', '.', '.', '.', '.'));
+                                 ('.', '.', '.', '.', '.'),
+                                 ('p', 'p', 'p', 'p', 'p'),
+                                 ('k', 'q', 'b', 'n', 'r'));
       
       White_Piece_Set := To_Set ("BKNPRQ");
       Black_Piece_Set := To_Set ("bknprq");
