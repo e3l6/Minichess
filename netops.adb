@@ -4,6 +4,11 @@
 --
 -- netops.adb
 --
+-- Much of the format and procedure names (and algorithms) were unabashedly
+--   borrowed from Bart Massey's netops.[hc] for his example minichess player
+--   found at https://github.com/BartMassey/imcs/tree/master/client/c as of
+--   20 May 2017.
+--
 -------------------------------------------------------------------------------
 
 package body Netops is
@@ -44,6 +49,8 @@ package body Netops is
       
       Put_Line (Exception_Name (E) & ": " & Exception_Message (E));
       
+      return (000);
+      
    end expectcmd;
    
    
@@ -82,6 +89,8 @@ package body Netops is
       
       Put_Line (Exception_Name (E) & ": " & Exception_Message (E));
       
+      return Null_Unbounded_String;
+      
    end Getnet;
    
    
@@ -102,8 +111,6 @@ package body Netops is
       Put_Line ("Creating socket");
       
       Create_Socket (Socket);
-      
-      --  Set_Socket_Option (Socket, Socket_Level, (Reuse_Address, True));
       
       Put_Line ("Opening connection with " & Image (Address));
       
@@ -133,6 +140,8 @@ package body Netops is
    exception when E : others =>
       
       Put_Line (Exception_Name (E) & ": " & Exception_Message (E));
+      
+      return False;
       
    end Initialize;
    

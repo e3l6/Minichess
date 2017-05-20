@@ -4,6 +4,11 @@
 --
 -- netops.ads
 --
+-- Much of the format and procedure names (and algorithms) were unabashedly
+--   borrowed from Bart Massey's netops.[hc] for his example minichess player
+--   found at https://github.com/BartMassey/imcs/tree/master/client/c as of
+--   20 May 2017.
+--
 -------------------------------------------------------------------------------
 
 with Ada.Exceptions;        use Ada.Exceptions;

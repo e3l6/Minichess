@@ -4,7 +4,7 @@
 OBJS = mc.o board.o negamax.o netops.o
 
 .adb.o:
-	gcc -c -gnat2012 -O3 $<
+	gcc -c -w -gnat2012 -O3 $<
 
 .SUFFIXES: .adb .o
 

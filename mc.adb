@@ -4,6 +4,11 @@
 --
 -- mc.adb
 --
+-- Some concepts (Key_Symbol in particular) borrowed from Bart Massey's
+--   from his example minichess player minime2-net.c found at
+--   https://github.com/BartMassey/imcs/tree/master/client/c as of
+--   20 May 2017.
+--
 -------------------------------------------------------------------------------
 
 with Ada.Characters.Handling; use Ada.Characters.Handling;
@@ -19,27 +24,24 @@ with Netops;                  use Netops;
 
 procedure MC is
    
-   Move_List    : Move_Vectors.Vector;
-   Move_Cursor  : Move_Vectors.Cursor;
-   Best_Move    : Move_Type;
-   Move         : Move_Type;
+   Best_Move     : Move_Type;
+   Move_List     : Move_Vectors.Vector;
+   Move_Cursor   : Move_Vectors.Cursor;
    
    Best_Score,
-   Nega_Score   : Integer := Integer'First + 1;
+   Nega_Score    : Integer := Integer'First + 1;
    
-   Alpha        : Integer := Integer'First + 1; 
-   Beta         : Integer := Integer'Last;
+   Alpha         : Integer := Integer'First + 1; 
+   Beta          : Integer := Integer'Last;
    
-   Position     : Board_Position_Type;
+   Response      : Integer;
    
-   Response     : Integer;
-   
-   My_Side      : Side_On_Move_Type;
-   Im_On_Move   : Boolean := False;
-   Response_Str : Unbounded_String  := Null_Unbounded_String;
-   Move_Command : String (1 .. 5);
-   Key_Symbol   : Character         := ' ';
-   Negamax_Score: Integer;
+   Im_On_Move    : Boolean := False;
+   Key_Symbol    : Character         := ' ';
+   Move_Command  : String (1 .. 5);
+   My_Side       : Side_On_Move_Type;
+   Negamax_Score : Integer;
+   Response_Str  : Unbounded_String  := Null_Unbounded_String;
    
 begin
    
@@ -86,8 +88,6 @@ begin
    
    
    Response_Str := Getnet (Key_Symbol);
-   --  Put_Line ("Key symbol = " & Key_Symbol);
-   --  Put_Line (">> " & To_String (Response_Str) & " <<");
    
 Game_Loop :
     loop
@@ -96,23 +96,11 @@ Game_Loop :
        
        exit when (Key_Symbol = '=');
        
-       --  if (Key_Symbol = '=') then
-       --     Put_Line (Standard_Error, "Exiting game loop");
-       --     exit Game_Loop;
-       --  end if;
-       
        
        if (To_String (Head (Response_Str, 1)) = "!") then
           
           Im_On_Move := False;
-          
-          --  Put      (Standard_Error, "Applying opponent move: ");
-          --  Put_Line (Standard_Error, """" & 
-          --            To_String (Tail (Head (Response_Str, 7), 5)) & """");
-          
           Move_Piece (Game_State, To_String (Tail (Head (Response_Str, 7), 5)));
-          
-          --  Put_Line (Standard_Error, "Opponent move applied");
           
        end if;
        
@@ -121,75 +109,18 @@ Game_Loop :
           
           if ((My_Side = W) and (Game_State.Side_On_Move = W)) then
              
-             --  Put_Line   (Standard_Error, "I'm white and on move. Constructing move_list");
-             --  Move_List  := Move_Generator (Game_State, Game_State.White_Positions);
              Im_On_Move := True;
-             
-             --  Put_Line   (Standard_Error, "Move list complete");
              
           elsif ((My_Side = B) and (Game_State.Side_On_Move = B)) then
              
-             --  Put_Line   (Standard_Error, "I'm Black and on move. Constructing move_list");
-             --  Move_List  := Move_Generator (Game_State, Game_State.Black_Positions);
              Im_On_Move := True;
-             
-             --  Put_Line   (Standard_Error, "Move list complete");
-             
+                          
           end if; -- Key_Symbol = '?'
-          
-       --  elsif (To_String (Head (Response_Str, 1)) = "!" then
-          
-       --     Im_On_Move := False;
-          
-       --     Put      (Standard_Error, "Applying opponent move: ");
-       --     Put_Line (Standard_Error, """" & 
-       --               To_String (Tail (Head (Response_Str, 7), 5)) & """");
-          
-       --     Move_Piece (Game_State, To_String (Tail (Head (Response_Str, 7), 5)));
-          
-       --     Put_Line (Standard_Error, "Opponent move applied");
-          
-       --  else
-          
-       --     Put_Line ("Unknow server response with key symbol = " & Key_Symbol);
           
        end if;             
        
        
        if (Im_On_Move = True) then
-          
-      --      -- Find the best move for me
-          
-      --      Move_Cursor := Move_Vectors.First (Move_List);
-      --      Best_Score  := Game_State.Score;
-      --      Best_Move   := Move_Vectors.Element (Move_Cursor);
-          
-      --  Traverse_Move_List :
-      --      while Move_Vectors.Has_Element (Move_Cursor) loop
-             
-      --         Move := Move_Vectors.Element (Move_Cursor);
-             
-      --         Move_Piece (Game_State, Move);
-             
-      --         Nega_Score := - Negamax.Negamax (Game_State, Max_Depth,
-      --                                          Integer'First + 1, Integer'Last);
-             
-      --         if (Nega_Score > Best_Score) then
-                
-      --            Best_Move  := Move;
-      --            Best_Score := Nega_Score;
-                
-      --         end if;
-             
-      --         Undo_Move (Game_State);
-             
-      --         Move_Cursor := Move_Vectors.Next (Move_Cursor);
-             
-      --      end loop Traverse_Move_List;
-          
-          
-          --  Put_Line (Standard_Error, "Initiating negamax search for " &
-          --            Side_On_Move_Type'Image (Game_State.Side_On_Move));
           
           Negamax_Score := Negamax.Negamax (Game_State, Max_Depth,
                                             Integer'First + 1, Integer'Last,
@@ -215,7 +146,6 @@ Game_Loop :
        Im_On_Move := False;
        
        Response_Str := Getnet (Key_Symbol);
-       --  Put_Line ("Key symbol = " & Key_Symbol);
        
     end loop Game_Loop;
     

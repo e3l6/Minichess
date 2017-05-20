@@ -66,10 +66,6 @@ package body Negamax is
       Best_Score  := -10_000;
       Move_Cursor := Move_Vectors.First (Move_List);
       
-      --  Put_Line ("Negamax: " & Integer'Image (State.Turn_Counter) & " " &
-      --            Side_On_Move_Type'Image (State.Side_On_Move));
-      
-      --  Print_Move_List (Move_List);
       
   Child_Search_Loop :
       while (Move_Vectors.Has_Element (Move_Cursor)) loop
@@ -83,8 +79,7 @@ package body Negamax is
                                   Best_Move);
          
          Undo_Move (State);
-         
-         
+                  
          if (Nega_Score > Best_Score) then
             
             Best_Score := Nega_Score;
@@ -95,7 +90,6 @@ package body Negamax is
             
          end if;
          
-         --  Best_Score  := Integer'Max (Best_Score,  Nega_Score);
          Local_Alpha := Integer'Max (Local_Alpha, Nega_Score);
          
          if (Local_Alpha >= Local_Beta) then
