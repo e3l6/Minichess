@@ -45,9 +45,9 @@ procedure MC is
    
 begin
    
-   if (Argument_Count /= 3) then
+   if (Argument_Count /= 4) then
       
-      Put_Line ("Usage: mc <Game_ID> <Side> <Password>");
+      Put_Line ("Usage: mc <Username> <Password> <Game_ID> <Side>");
       return;
       
    end if;
@@ -60,14 +60,14 @@ begin
    
    -- Connect to server and initiate game
    
-   if (Initialize (Argument (3)) /= True) then
+   if (Initialize (Argument (1), Argument (2)) /= True) then
       
       Put_Line ("Unable to initialize connection with game server");
       return;
       
    end if;
    
-   Sendcmd ("accept " & Argument (1) & " " & Argument (2));
+   Sendcmd ("accept " & Argument (3) & " " & Argument (4));
    
    Response := Expectcmd;
    
@@ -78,7 +78,7 @@ begin
       
    end if;
       
-   if (Argument (2) = "W") then
+   if (Argument (4) = "W") then
       My_Side := W;
       Put_Line (Standard_Error, "I am white");
    else

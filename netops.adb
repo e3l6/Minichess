@@ -26,8 +26,6 @@ package body Netops is
    
    CRLF       : constant String := ASCII.CR & ASCII.LF;
    
-   Username   : constant String := "Archimeathead";
-   
    ----------------------------------------------------------------------------
    function Expectcmd return Integer is
       
@@ -95,7 +93,8 @@ package body Netops is
    
    
    ----------------------------------------------------------------------------
-   function Initialize (Password : String) return Boolean is
+   function Initialize (Username : in     String;
+                        Password : in     String) return Boolean is
       
    begin
       

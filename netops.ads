@@ -25,7 +25,8 @@ package Netops is
    function  Getnet     (Key_Symbol :    out Character)
                         return Unbounded_String;
    
-   function  Initialize (Password   : in     String) return Boolean;
+   function  Initialize (Username   : in     String;
+                         Password   : in     String) return Boolean;
    
    procedure Sendcmd    (Command    : in     String);
    
