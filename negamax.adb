@@ -14,7 +14,8 @@ package body Negamax is
    function Negamax (State     : in out Game_State_Type;
                      Depth     : in     Integer;
                      Alpha,
-                     Beta      : in     Integer)
+                     Beta      : in     Integer;
+                     Best_Move :    out Move_Type)
                     return integer is
       
       Move_Cursor : Move_Vectors.Cursor;
@@ -32,7 +33,9 @@ package body Negamax is
       Evaluate_Score (State);
       
       if ((Depth <= 0) or
-          ((State.Turn_Counter = 40) and (State.Side_On_Move = B))) then
+          ((State.Turn_Counter = 40) and (State.Side_On_Move = B)) or
+          ((State.White_King_In_Play = False) or
+           (State.Black_King_In_Play = False))) then
          
          return (State.Score);
          
@@ -42,7 +45,7 @@ package body Negamax is
          
          if (State.White_King_In_Play = False) then
             
-            return Integer'First + 1;
+            return -10_000;
             
          end if;
          
@@ -52,7 +55,7 @@ package body Negamax is
          
          if (State.Black_King_In_Play = False) then
             
-            return Integer'First + 1;
+            return -10_000;
             
          end if;
          
@@ -60,8 +63,13 @@ package body Negamax is
          
       end if;
       
-      Best_Score  := Integer'First + 1;
+      Best_Score  := -10_000;
       Move_Cursor := Move_Vectors.First (Move_List);
+      
+      --  Put_Line ("Negamax: " & Integer'Image (State.Turn_Counter) & " " &
+      --            Side_On_Move_Type'Image (State.Side_On_Move));
+      
+      --  Print_Move_List (Move_List);
       
   Child_Search_Loop :
       while (Move_Vectors.Has_Element (Move_Cursor)) loop
@@ -71,11 +79,23 @@ package body Negamax is
          Move_Piece (State, Move);
          
          Nega_Score := - Negamax (State, Depth - 1,
-                                  - Local_Beta, - Local_Alpha);
+                                  - Local_Beta, - Local_Alpha,
+                                  Best_Move);
          
          Undo_Move (State);
          
-         Best_Score  := Integer'Max (Best_Score,  Nega_Score);
+         
+         if (Nega_Score > Best_Score) then
+            
+            Best_Score := Nega_Score;
+            
+            if (Depth = Max_Depth) then
+               Best_Move  := Move;
+            end if;
+            
+         end if;
+         
+         --  Best_Score  := Integer'Max (Best_Score,  Nega_Score);
          Local_Alpha := Integer'Max (Local_Alpha, Nega_Score);
          
          if (Local_Alpha >= Local_Beta) then

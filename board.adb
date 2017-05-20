@@ -22,12 +22,12 @@ package body Board is
       Game_State.Turn_Counter := 1;
       Game_State.Side_On_Move := W;
       
-      Game_State.Board_Array := (('R', 'N', 'B', 'Q', 'K'),
-                                 ('P', 'P', 'P', 'P', 'P'),
-                                 ('.', '.', '.', '.', '.'),
-                                 ('.', '.', '.', '.', '.'),
-                                 ('p', 'p', 'p', 'p', 'p'),
-                                 ('k', 'q', 'b', 'n', 'r'));
+      Game_State.Board_Array := (6 => ('k', 'q', 'b', 'n', 'r'),
+                                 5 => ('p', 'p', 'p', 'p', 'p'),
+                                 4 => ('.', '.', '.', '.', '.'),
+                                 3 => ('.', '.', '.', '.', '.'),
+                                 2 => ('P', 'P', 'P', 'P', 'P'),
+                                 1 => ('R', 'N', 'B', 'Q', 'K'));
       
       White_Piece_Set := To_Set ("BKNPRQ");
       Black_Piece_Set := To_Set ("bknprq");
@@ -455,10 +455,6 @@ package body Board is
       Move.Capture := State.Board_Array(Move.To.R,   Move.To.C);
       
       Move_Piece (Game_State, Move);
-      
-      Print_Move (Move);
-      
-      New_Line (2);
       
    end;
    
