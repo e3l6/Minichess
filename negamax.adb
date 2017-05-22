@@ -13,21 +13,22 @@ package body Negamax is
    
    function Negamax (State      : in out Game_State_Type;
                      Depth      : in     Integer;
+                     Top_Level  : in     Integer;
                      Alpha,
                      Beta       : in     Integer;
                      Best_Move  :    out Move_Type;
                      Best_Depth :    out Integer)
                     return integer is
       
-      Move_Cursor : Move_Vectors.Cursor;
-      Move_List   : Move_Vectors.Vector;
-      Move        : Move_Type;
+      Move_Cursor     : Move_Vectors.Cursor;
+      Move_List       : Move_Vectors.Vector;
+      Move            : Move_Type;
       
       Best_Score,
-      Nega_Score  : Integer;
+      Nega_Score      : Integer;
       
-      Local_Alpha      : Integer := Alpha;
-      Local_Beta       : Integer := Beta;
+      Local_Alpha     : Integer := Alpha;
+      Local_Beta      : Integer := Beta;
       
    begin
       
@@ -64,8 +65,8 @@ package body Negamax is
          
       end if;
       
-      Best_Score  := -10_000;
-      Move_Cursor := Move_Vectors.First (Move_List);
+      Best_Score      := -10_000;
+      Move_Cursor     := Move_Vectors.First (Move_List);
       
       --  Put_Line ("Depth : " & Integer'Image (Depth));
       --  Print_Position_Lists (State);
@@ -77,7 +78,7 @@ package body Negamax is
          
          Move_Piece (State, Move);
          
-         Nega_Score := - Negamax (State, Depth - 1,
+         Nega_Score := - Negamax (State, Depth - 1, Top_Level,
                                   - Local_Beta, - Local_Alpha,
                                   Best_Move, Best_Depth);
          
@@ -108,7 +109,7 @@ package body Negamax is
             Best_Score := Nega_Score;
             Best_Depth := Depth;
             
-            if (Depth = Max_Depth) then
+            if (Depth = Top_level) then
                Best_Move  := Move;
             end if;
             
@@ -116,9 +117,8 @@ package body Negamax is
          
          Local_Alpha := Integer'Max (Local_Alpha, Nega_Score);
          
-         --  if (Depth = Max_Depth) then
+         --  if (Depth = Top_Level) then
          --     Put ("Best Depth :" & Integer'Image (Best_Depth));
-         --     --  Put        (" SOM " & Side_On_Move_Type'Image (State.Side_On_Move));
          --     Put ("  Move : ");
          --     Print_Move (Move);
          --     Set_Col (44);

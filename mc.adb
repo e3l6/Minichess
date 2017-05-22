@@ -24,25 +24,27 @@ with Netops;                  use Netops;
 
 procedure MC is
    
-   Best_Move     : Move_Type;
-   Move_List     : Move_Vectors.Vector;
-   Move_Cursor   : Move_Vectors.Cursor;
+   Best_Move      : Move_Type;
+   Iterative_Move : Move_Type;
+   Move_List      : Move_Vectors.Vector;
+   Move_Cursor    : Move_Vectors.Cursor;
    
    Best_Score,
-   Nega_Score    : Integer := Integer'First + 1;
-   Best_Depth    : Integer := 0;
+   Nega_Score     : Integer := Integer'First + 1;
    
-   Alpha         : Integer := Integer'First + 1; 
-   Beta          : Integer := Integer'Last;
+   Best_Depth     : Integer := 0;
    
-   Response      : Integer;
+   Alpha          : Integer := Integer'First + 1; 
+   Beta           : Integer := Integer'Last;
    
-   Im_On_Move    : Boolean := False;
-   Key_Symbol    : Character         := ' ';
-   Move_Command  : String (1 .. 5);
-   My_Side       : Side_On_Move_Type;
-   Negamax_Score : Integer;
-   Response_Str  : Unbounded_String  := Null_Unbounded_String;
+   Response       : Integer;
+   
+   Im_On_Move     : Boolean := False;
+   Key_Symbol     : Character         := ' ';
+   Move_Command   : String (1 .. 5);
+   My_Side        : Side_On_Move_Type;
+   Negamax_Score  : Integer;
+   Response_Str   : Unbounded_String  := Null_Unbounded_String;
    
 begin
    
@@ -154,13 +156,62 @@ Game_Loop :
           
           --  Print_Position_Lists (Game_State);
           
-          Negamax_Score := Negamax.Negamax (Game_State, Max_Depth,
-                                            Integer'First + 1, Integer'Last,
-                                            Best_Move, Best_Depth);
+          Best_Score := Negamax.Negamax (Game_State, 1, 1,
+                                         Integer'First + 1, Integer'Last,
+                                         Best_Move, Best_Depth);
+          
+          --  Put ("Depth 1 computed, best move is ");
+          --  Print_Move (Best_Move);
+          --  Put (" score ");
+          --  Put (Best_Score);
+          --  New_Line;
+          
+          if (Best_Score /= 10_000) then
+             
+         Iterative_Loop :
+             for I in 2 .. Max_Depth loop
+                
+                Negamax_Score := Negamax.Negamax (Game_State, I, I,
+                                                  Integer'First + 1,
+                                                  Integer'Last, Iterative_Move,
+                                                  Best_Depth);
+                
+                --  Put ("Depth ");
+                --  Put (I, 0);
+                --  Put (" computed, iterative move is ");
+                --  Print_Move (Iterative_Move);
+                --  Put (" score ");
+                --  Put (Negamax_Score);
+                
+                if (Nega_Score = -10_000) then
+                   
+                   --  New_Line;
+                   exit Iterative_Loop;
+                   
+                elsif (Best_Score = 10_000) then
+                   
+                   Best_Move  := Iterative_Move;
+                   Best_Score := Nega_Score;
+                   --  New_Line;
+                   exit Iterative_Loop;
+                   
+                else
+                   
+                   Best_Move  := Iterative_Move;
+                   Best_Score := Nega_Score;
+                   
+                end if;
+                
+                --  New_Line;
+                
+             end loop Iterative_loop;
+             
+          end if;
           
           -- Apply best move
           
-          Move_Command := To_Lower (Board_Column_Type'Image (Best_Move.From.C)) &
+          Move_Command := 
+            To_Lower (Board_Column_Type'Image (Best_Move.From.C)) &
             Trim (Board_Row_Type'Image (Best_Move.From.R), Both) & "-" &
             To_Lower (Board_Column_Type'Image (Best_Move.to.C)) &
             Trim (Board_Row_Type'Image (Best_Move.To.R), Both);

@@ -15,6 +15,7 @@ package Negamax is
    
    function Negamax (State      : in out Game_State_Type;
                      Depth      : in     Integer;
+                     Top_Level  : in     Integer;
                      Alpha,
                      Beta       : in     Integer;
                      Best_Move  :    out Move_Type;
