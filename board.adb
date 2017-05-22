@@ -83,7 +83,7 @@ package body Board is
          case State.Board_Array(Position.R, Position.C) is
             
             when 'K' => 
-               null;
+               White_Score := White_Score + 1000;
                
             when 'Q' => 
                White_Score := White_Score + 900;
@@ -101,8 +101,14 @@ package body Board is
                White_Score := White_Score + 100;
                
             when others => 
+               Print_Move_List (State.Move_Log);
+               Print_Board (State);
+               Print_Position_Lists (State);
+               Put      ("Position ");
+               Print_Position (Position);
+               Put_Line (" is marked '" & State.Board_Array(Position.R, Position.C) & "'");
                raise Illegal_Move with
-               "Invalid piece in score evaluation for white";
+                 "Invalid piece in score evaluation for white";
                
          end case;
          
@@ -119,7 +125,7 @@ package body Board is
          case State.Board_Array(Position.R, Position.C) is
             
             when 'k' => 
-               null;
+               Black_Score := Black_Score + 1000;
                
             when 'q' => 
                Black_Score := Black_Score + 900;
@@ -137,6 +143,12 @@ package body Board is
                Black_Score := Black_Score + 100;
                
             when others => 
+               Print_Move_List (State.Move_Log);
+               Print_Board (State);
+               Print_Position_Lists (State);
+               Put      ("Position ");
+               Print_Position (Position);
+               Put_Line (" is marked '" & State.Board_Array(Position.R, Position.C) & "'");
                raise Illegal_Move with
                  "Invalid piece in score evaluation for black";
                
@@ -158,6 +170,12 @@ package body Board is
             
          end if;
          
+         if (State.Black_King_In_Play = False) then
+            
+            State.Score := 10_000;
+            
+         end if;
+         
       else
          
          if (State.Black_King_In_Play = True) then
@@ -167,6 +185,12 @@ package body Board is
          else
             
             State.Score := -10_000;
+            
+         end if;
+         
+         if (State.White_King_In_Play = False) then
+            
+            State.Score := 10_000;
             
          end if;
          
@@ -415,11 +439,25 @@ package body Board is
       
       Move_Vectors.Append (State.Move_Log, Move);
       
-      -- Move the piece to the new position and clear the new position
+      -- Move the piece to the new position and clear the old position
       
-      State.Board_Array(Move.To.R, Move.To.C) :=
-        State.Board_Array(Move.From.R, Move.From.C);
+      -- Promote pawns
       
+      if ((Move.Piece = 'P') and (Move.To.R = 6)) then
+         
+         State.Board_Array(Move.To.R, Move.To.C) := 'Q';
+         
+      elsif ((Move.Piece = 'p') and (Move.To.R = 1)) then
+         
+         State.Board_Array(Move.To.R, Move.To.C) := 'q';
+         
+      else
+         
+         State.Board_Array(Move.To.R, Move.To.C) :=
+           State.Board_Array(Move.From.R, Move.From.C);
+         
+      end if;
+            
       State.Board_Array(Move.From.R, Move.From.C) := '.';
       
       Evaluate_Score (State);
@@ -748,6 +786,17 @@ package body Board is
          Old_Move := Move_Vectors.Last_Element (State.Move_Log);
          
          -- Move the piece back to its origin, and replace the captured piece
+         
+         --  Put ("Undoing ");
+         --  Print_Move (Old_Move);
+         --  New_Line;
+         
+         --  if (Old_Move.To.R = 6) then            
+         --     Put ("Old piece is '" & Old_Move.Piece & "'");
+         --     Put_line (" Old capture is '" & Old_Move.Capture & "'");
+         --     Print_Board (State);
+         --     Print_Move_List (State.Move_Log);
+         --  end if;
          
          State.Board_Array (Old_Move.From.R, Old_Move.From.C) :=
            Old_Move.Piece;

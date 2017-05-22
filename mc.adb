@@ -30,6 +30,7 @@ procedure MC is
    
    Best_Score,
    Nega_Score    : Integer := Integer'First + 1;
+   Best_Depth    : Integer := 0;
    
    Alpha         : Integer := Integer'First + 1; 
    Beta          : Integer := Integer'Last;
@@ -45,17 +46,25 @@ procedure MC is
    
 begin
    
-   if (Argument_Count /= 4) then
-      
-      Put_Line ("Usage: mc <Username> <Password> <Game_ID> <Side>");
+   if (Argument_Count < 4) then
+      Put      ("Usage: mc <Username> <Password> ");
+      Put_Line ("{-a <Game_ID> <Side> | -o <W|B>} [-d <Max Depth>]");
       return;
-      
    end if;
    
    
    -- Set up game board
    
    Initialize_Game;
+   
+   
+   if (Argument_Count > 5) then
+      Negamax.Max_Depth := Integer'Value (Argument (Argument_Count));
+   end if;
+   
+   Put ("Max search depth set to ");
+   Put (Negamax.Max_Depth, 0);
+   New_Line;
    
    
    -- Connect to server and initiate game
@@ -67,25 +76,46 @@ begin
       
    end if;
    
-   Sendcmd ("accept " & Argument (3) & " " & Argument (4));
-   
-   Response := Expectcmd;
-   
-   if ((Response /= 105) and (Response /= 106)) then
+   if (Argument(3) = "-a") then
       
-      Put_Line ("Unexpected server response");
-      return;
+      Sendcmd ("accept " & Argument (4) & " " & Argument (5));
+      
+      Response := Expectcmd;
+      
+      if ((Response /= 105) and (Response /= 106)) then
+         
+         Put_Line ("Unexpected server response");
+         return;
+         
+      end if;
+      
+      if (Argument (5) = "W") then
+         My_Side := W;
+         Put_Line (Standard_Error, "I am white");
+      else
+         My_Side := B;
+         Put_Line (Standard_Error, "I am black");
+      end if;
+      
+   elsif (Argument (3) = "-o") then
+      
+      Sendcmd ("offer " & Argument (4));
+      
+      Response := Expectcmd;
+      
+      while ((Response /= 105) and (Response /= 106)) loop
+         Response := Expectcmd;
+      end loop;
+      
+      if (Argument (4) = "W") then
+         My_Side := W;
+         Put_Line (Standard_Error, "I am white");
+      else
+         My_Side := B;
+         Put_Line (Standard_Error, "I am black");
+      end if;
       
    end if;
-      
-   if (Argument (4) = "W") then
-      My_Side := W;
-      Put_Line (Standard_Error, "I am white");
-   else
-      My_Side := B;
-      Put_Line (Standard_Error, "I am black");
-   end if;
-   
    
    Response_Str := Getnet (Key_Symbol);
    
@@ -122,9 +152,11 @@ Game_Loop :
        
        if (Im_On_Move = True) then
           
+          --  Print_Position_Lists (Game_State);
+          
           Negamax_Score := Negamax.Negamax (Game_State, Max_Depth,
                                             Integer'First + 1, Integer'Last,
-                                            Best_Move);
+                                            Best_Move, Best_Depth);
           
           -- Apply best move
           

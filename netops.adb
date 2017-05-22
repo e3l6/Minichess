@@ -69,7 +69,7 @@ package body Netops is
          
          Key_Symbol := '=';
          
-      elsif (Index (Return_Str, CRLF & "?", 1) /= 0) then
+      elsif (Index (Return_Str, "?", 1) /= 0) then
          
          Key_Symbol := '?';
          

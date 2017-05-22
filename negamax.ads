@@ -13,11 +13,12 @@ package Negamax is
    Max_Depth : Integer := 6;
    
    
-   function Negamax (State     : in out Game_State_Type;
-                     Depth     : in     Integer;
+   function Negamax (State      : in out Game_State_Type;
+                     Depth      : in     Integer;
                      Alpha,
-                     Beta      : in     Integer;
-                     Best_Move :    out Move_Type)
+                     Beta       : in     Integer;
+                     Best_Move  :    out Move_Type;
+                     Best_Depth :    out Integer)
                     return Integer;
    
 end Negamax;
