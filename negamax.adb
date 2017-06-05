@@ -6,18 +6,20 @@
 --
 -------------------------------------------------------------------------------
 
-with Ada.Text_Io;          use Ada.Text_IO;
 with Ada.Integer_Text_IO;  use Ada.Integer_Text_IO;
+with Ada.Text_IO;          use Ada.Text_IO;
 
 package body Negamax is
    
-   function Negamax (State      : in out Game_State_Type;
-                     Depth      : in     Integer;
-                     Top_Level  : in     Integer;
+   function Negamax (State         : in out Game_State_Type;
+                     Depth         : in     Integer;
+                     Top_Level     : in     Integer;
                      Alpha,
-                     Beta       : in     Integer;
-                     Best_Move  :    out Move_Type;
-                     Best_Depth :    out Integer)
+                     Beta          : in     Integer;
+                     Best_Move     :    out Move_Type;
+                     Best_Depth    :    out Integer;
+                     Thinking_Time : in     Time;
+                     Partial_Flag  : in out Boolean)
                     return integer is
       
       Move_Cursor     : Move_Vectors.Cursor;
@@ -74,16 +76,29 @@ package body Negamax is
   Child_Search_Loop :
       while (Move_Vectors.Has_Element (Move_Cursor)) loop
          
+         if (Clock > Thinking_Time) then
+            
+            Best_Score := Integer'First + 1;
+            
+            Partial_Flag := True;
+            
+            exit Child_Search_Loop;
+            
+         end if;
+         
+         
          Move := Move_Vectors.Element (Move_Cursor);
          
          Move_Piece (State, Move);
          
          Nega_Score := - Negamax (State, Depth - 1, Top_Level,
                                   - Local_Beta, - Local_Alpha,
-                                  Best_Move, Best_Depth);
+                                  Best_Move, Best_Depth,
+                                  Thinking_Time, Partial_Flag);
          
          Undo_Move (State);
                   
+         
          if (Depth = 1) then
             Best_Depth := Depth;
          end if;

@@ -11,40 +11,44 @@
 --
 -------------------------------------------------------------------------------
 
+with Ada.Calendar.Formatting; use Ada.Calendar.Formatting;
 with Ada.Characters.Handling; use Ada.Characters.Handling;
 with Ada.Command_Line;        use Ada.Command_Line;
 with Ada.Integer_Text_IO;     use Ada.Integer_Text_IO;
-with Ada.Text_IO;             use Ada.Text_IO;
+with Ada.Real_Time;           use Ada.Real_Time;
 with Ada.Strings;             use Ada.Strings;
 with Ada.Strings.Fixed;       use Ada.Strings.Fixed;
 with Ada.Strings.Unbounded;   use Ada.Strings.Unbounded;
+with Ada.Text_IO;             use Ada.Text_IO;
+
 with Board;                   use Board;
 with Negamax;                 use Negamax;
 with Netops;                  use Netops;
 
 procedure MC is
    
-   Best_Move      : Move_Type;
-   Iterative_Move : Move_Type;
-   Move_List      : Move_Vectors.Vector;
-   Move_Cursor    : Move_Vectors.Cursor;
+   Best_Move        : Move_Type;
+   Iterative_Move   : Move_Type;
+   Move_List        : Move_Vectors.Vector;
+   Move_Cursor      : Move_Vectors.Cursor;
    
+   Thinking_Time    : Time;
+   
+   Alpha            : Integer := Integer'First + 1; 
+   Beta             : Integer := Integer'Last;
    Best_Score,
-   Nega_Score     : Integer := Integer'First + 1;
+   Nega_Score       : Integer := Integer'First + 1;
+   Partial_Flag     : Boolean := False;
    
-   Best_Depth     : Integer := 0;
+   Best_Depth       : Integer := 0;
    
-   Alpha          : Integer := Integer'First + 1; 
-   Beta           : Integer := Integer'Last;
-   
-   Response       : Integer;
-   
-   Im_On_Move     : Boolean := False;
-   Key_Symbol     : Character         := ' ';
-   Move_Command   : String (1 .. 5);
-   My_Side        : Side_On_Move_Type;
-   Negamax_Score  : Integer;
-   Response_Str   : Unbounded_String  := Null_Unbounded_String;
+   Im_On_Move       : Boolean := False;
+   Key_Symbol       : Character         := ' ';
+   Move_Command     : String (1 .. 5);
+   My_Side          : Side_On_Move_Type;
+   Negamax_Score    : Integer;
+   Response         : Integer;
+   Response_Str     : Unbounded_String  := Null_Unbounded_String;
    
 begin
    
@@ -149,16 +153,21 @@ Game_Loop :
                           
           end if; -- Key_Symbol = '?'
           
-       end if;             
+       end if;       
        
        
        if (Im_On_Move = True) then
+          
+          Thinking_Time := Clock + Milliseconds (Max_Time);
+          
+          Partial_Flag  := False;
           
           --  Print_Position_Lists (Game_State);
           
           Best_Score := Negamax.Negamax (Game_State, 1, 1,
                                          Integer'First + 1, Integer'Last,
-                                         Best_Move, Best_Depth);
+                                         Best_Move, Best_Depth, Thinking_Time,
+                                         Partial_Flag);
           
           --  Put ("Depth 1 computed, best move is ");
           --  Print_Move (Best_Move);
@@ -174,7 +183,8 @@ Game_Loop :
                 Negamax_Score := Negamax.Negamax (Game_State, I, I,
                                                   Integer'First + 1,
                                                   Integer'Last, Iterative_Move,
-                                                  Best_Depth);
+                                                  Best_Depth, Thinking_Time,
+                                                  Partial_Flag);
                 
                 --  Put ("Depth ");
                 --  Put (I, 0);
@@ -183,11 +193,23 @@ Game_Loop :
                 --  Put (" score ");
                 --  Put (Negamax_Score);
                 
-                if (Nega_Score = -10_000) then
+                if (Nega_Score = -10_000) Then
                    
                    --  New_Line;
                    exit Iterative_Loop;
                    
+                elsif (Partial_Flag = True) then
+                   
+                   --  Put ("Time limit expired at depth ");
+                   --  Put (I, 0);
+                   --  Put (" after ");
+                   --  Put (Image (To_Duration (Clock - 
+                   --                             Thinking_Time + 
+                   --                             Milliseconds (Max_Time))));
+                   --  New_Line;
+                   
+                   exit Iterative_Loop;
+                    
                 elsif (Best_Score = 10_000) then
                    
                    Best_Move  := Iterative_Move;
