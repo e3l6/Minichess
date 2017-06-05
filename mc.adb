@@ -45,7 +45,7 @@ procedure MC is
    My_Side        : Side_On_Move_Type;
    Negamax_Score  : Integer;
    Response_Str   : Unbounded_String  := Null_Unbounded_String;
-   
+      
 begin
    
    if (Argument_Count < 4) then
@@ -105,18 +105,28 @@ begin
       
       Response := Expectcmd;
       
-      while ((Response /= 105) and (Response /= 106)) loop
-         Response := Expectcmd;
-      end loop;
+      Response := Expectcmd;
       
-      if (Argument (4) = "W") then
-         My_Side := W;
-         Put_Line (Standard_Error, "I am white");
-      else
-         My_Side := B;
-         Put_Line (Standard_Error, "I am black");
-      end if;
-      
+  Response_Loop :
+      loop
+         if (Response = 105) then
+            My_Side := W;
+            Put_Line (Standard_Error, "I am white");
+            exit Response_Loop;   
+         elsif (Response = 106) then
+            My_Side := B;
+            Put_Line (Standard_Error, "I am black");
+            exit Response_Loop;   
+         elsif (Response = 421) then
+            Shutdown;
+            return;
+         else
+            Put ("Unexpected server response: ");
+            Put (Response, 0);
+            New_Line;
+            Response := Expectcmd;
+         end if;
+      end loop Response_Loop;
    end if;
    
    Response_Str := Getnet (Key_Symbol);
@@ -156,9 +166,25 @@ Game_Loop :
           
           --  Print_Position_Lists (Game_State);
           
-          Best_Score := Negamax.Negamax (Game_State, 1, 1,
+          --  Best_Score := Negamax.Negamax (Game_State, 1, 1,
+          --                                 Integer'First + 1, Integer'Last,
+          --                                 Move_List);
+                    
+          Best_Score := Negamax.Negamax (Game_State, Max_Depth, Max_Depth,
                                          Integer'First + 1, Integer'Last,
-                                         Best_Move, Best_Depth);
+                                         Move_List);
+          
+          Put ("Game loop: negamax calculated - best score is ");
+          Put (Best_Score, 0);
+          New_Line;
+          
+          --  Print_Move_List  (Move_List);
+          
+          Move_Sorter.Sort (Move_List);
+          
+          Print_Move_List  (Move_List);
+          
+          Best_Move := Move_List.First_Element;
           
           --  Put ("Depth 1 computed, best move is ");
           --  Print_Move (Best_Move);
@@ -166,47 +192,50 @@ Game_Loop :
           --  Put (Best_Score);
           --  New_Line;
           
-          if (Best_Score /= 10_000) then
+         --   if (Best_Score /= 10_000) then
              
-         Iterative_Loop :
-             for I in 2 .. Max_Depth loop
+         --  Iterative_Loop :
+         --      for I in 2 .. Max_Depth loop
                 
-                Negamax_Score := Negamax.Negamax (Game_State, I, I,
-                                                  Integer'First + 1,
-                                                  Integer'Last, Iterative_Move,
-                                                  Best_Depth);
+         --         --  Negamax_Score := Negamax.Negamax (Game_State, I, I,
+         --         --                                    Integer'First + 1,
+         --         --                                    Integer'Last, Iterative_Move,
+         --         --                                    Best_Depth);
                 
-                --  Put ("Depth ");
-                --  Put (I, 0);
-                --  Put (" computed, iterative move is ");
-                --  Print_Move (Iterative_Move);
-                --  Put (" score ");
-                --  Put (Negamax_Score);
+         --         Negamax.Negamax (Game_State, 1, 1, Integer'First + 1, Integer'Last,
+         --                          Move_List);
                 
-                if (Nega_Score = -10_000) then
-                   
-                   --  New_Line;
-                   exit Iterative_Loop;
-                   
-                elsif (Best_Score = 10_000) then
-                   
-                   Best_Move  := Iterative_Move;
-                   Best_Score := Nega_Score;
-                   --  New_Line;
-                   exit Iterative_Loop;
-                   
-                else
-                   
-                   Best_Move  := Iterative_Move;
-                   Best_Score := Nega_Score;
-                   
-                end if;
+         --         --  Put ("Depth ");
+         --         --  Put (I, 0);
+         --         --  Put (" computed, iterative move is ");
+         --         --  Print_Move (Iterative_Move);
+         --         --  Put (" score ");
+         --         --  Put (Negamax_Score);
                 
-                --  New_Line;
+         --         if (Nega_Score = -10_000) then
+                   
+         --            --  New_Line;
+         --            exit Iterative_Loop;
+                   
+         --         elsif (Best_Score = 10_000) then
+                   
+         --            Best_Move  := Iterative_Move;
+         --            Best_Score := Nega_Score;
+         --            --  New_Line;
+         --            exit Iterative_Loop;
+                   
+         --         else
+                   
+         --            Best_Move  := Iterative_Move;
+         --            Best_Score := Nega_Score;
+                   
+         --         end if;
                 
-             end loop Iterative_loop;
+         --         --  New_Line;
+                
+         --      end loop Iterative_loop;
              
-          end if;
+         --   end if;
           
           -- Apply best move
           
@@ -222,6 +251,9 @@ Game_Loop :
           
           Move_Piece (Game_State, Move_Command);
           
+          Put (- Game_State.Score, 0);
+          New_Line;
+          
           --  Move_Vectors.Clear (Move_List);
           
        end if;
@@ -233,11 +265,19 @@ Game_Loop :
     end loop Game_Loop;
     
     
+    
     -- Quit the server and close the connections
     
-    Put_Line (Standard_Error, "Quitting game");
+    --  Put_Line (Standard_Error, "Quitting game");
     
     Sendcmd ("quit");
+    
+    Put ("Nr nodes searched:  ");
+    Put (Nr_Nodes_Searched, 0);
+    New_Line;
+    Put ("Nr branches pruned: ");
+    Put (Nr_Branches_Pruned, 0);
+    New_Line (2);
     
     Shutdown;
     

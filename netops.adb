@@ -41,6 +41,10 @@ package body Netops is
       
       Put_Line (To_String(Return_Str));
       
+      --  Put ("Command returned was: ");
+      --  Put (Integer'Value (To_String (Head (Return_Str, 3))));
+      --  New_Line (2);
+      
       return (Integer'Value (To_String (Head (Return_Str, 3))));
       
    exception when E : others =>

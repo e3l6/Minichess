@@ -31,13 +31,16 @@ package Board is
    type Move_Type is record
       From, To        : Board_Position_Type;
       Piece, Capture  : Character;
+      Score           : Integer;
    end record;      
+   
    
    -- Need to put these two package instantiations here, otherwise it all
    --   fails to load properly. Friggin' spaghetti.
    
    package Position_Vectors is new Vectors (Positive, Board_Position_Type);
    package Move_Vectors     is new Vectors (Positive, Move_Type);
+   
    
    subtype Turn_Counter_Type is Positive range 1 .. 41;
    
@@ -80,10 +83,12 @@ package Board is
    
    procedure Evaluate_Score     (State         : in out Game_State_Type);
    
+   function  Is_Greater         (Left, Right   : in     Move_Type)
+                                return Boolean;
+   
    function  Move_Generator     (State         : in     Game_State_Type;
                                  Position_List : in     Position_Vectors.vector)
                                 return Move_Vectors.Vector;
-
    
    procedure Move_Piece         (State         : in out Game_State_Type;
                                  Move          : in out Move_Type);
@@ -114,7 +119,14 @@ package Board is
    
    procedure Print_Position_Lists
                                 (State         : in     Game_State_Type);
-
+   
    procedure Undo_Move          (State         : in out Game_State_Type);
+   
+   
+   ----------------------------------------------------------------------------
+   -- Generic package instations
+   ----------------------------------------------------------------------------
+   
+   package Move_Sorter is new Move_Vectors.Generic_Sorting ("<" => Is_Greater);
    
 end Board;

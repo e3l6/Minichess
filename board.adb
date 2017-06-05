@@ -19,6 +19,9 @@ package body Board is
       
    begin
       
+      White_Piece_Set := To_Set ("BKNPRQ");
+      Black_Piece_Set := To_Set ("bknprq");
+      
       Game_State.Turn_Counter := 1;
       Game_State.Side_On_Move := W;
       
@@ -28,9 +31,6 @@ package body Board is
                                  3 => ('.', '.', '.', '.', '.'),
                                  2 => ('P', 'P', 'P', 'P', 'P'),
                                  1 => ('R', 'N', 'B', 'Q', 'K'));
-      
-      White_Piece_Set := To_Set ("BKNPRQ");
-      Black_Piece_Set := To_Set ("bknprq");
       
       -- Scan the board and populate the position vectors for each player
       
@@ -200,6 +200,22 @@ package body Board is
    
    
    ----------------------------------------------------------------------------
+   function Is_Greater (Left, Right : in     Move_Type) return Boolean is
+      
+      -- Used in instantiating the generic sort package for Move_Vectors
+      --   to sort moves in the vector by their scores. This is the function
+      --   that Move_Vectors.Generic_Sorting."<" will use to compare two moves.
+      --   Using this function to sort a Move_Vectors container will result in
+      --   the list being sorted from highest to lowest scores
+      
+   begin
+      
+      return (Left.Score > Right.Score);
+      
+   end Is_Greater;   
+   
+   
+   ----------------------------------------------------------------------------
    function Move_Generator (State         : in     Game_State_Type;
                             Position_List : in     Position_Vectors.vector)
                            return Move_Vectors.Vector is
@@ -281,7 +297,7 @@ package body Board is
                                                Move_Symmetry_Scan
                                                (State, Position, 2, -1,
                                                 Stop_Short, Capture));
-              
+               
             when 'P' =>
                
                Stop_Short := True;
@@ -320,6 +336,12 @@ package body Board is
                
             when others =>
                
+               Print_Move_List (State.Move_Log);
+               Print_Board (State);
+               Print_Position_Lists (State);
+               Put      ("Position ");
+               Print_Position (Position);
+               Put_Line (" is marked '" & State.Board_Array(Position.R, Position.C) & "'");
                raise Illegal_Move with "Invalid piece in move scan";
                
          end case;
@@ -352,12 +374,30 @@ package body Board is
          
          if (not Is_In (Move.piece, White_Piece_Set)) then
             
+            Print_Move_List (State.Move_Log);
+            Print_Board (State);
+            Print_Position_Lists (State);
+            Put ("White attempting move ");
+            Print_Move (Move);
+            New_Line;
+            Put      ("Position ");
+            Print_Position (Move.From);
+            Put_Line (" is marked '" & State.Board_Array(Move.From.R, Move.From.C) & "'");
             raise Illegal_Move with "Origin piece not owned by side on move";
             
          end if;
          
          if (Is_In (Move.Capture, White_Piece_Set)) then
             
+            Print_Move_List (State.Move_Log);
+            Print_Board (State);
+            Print_Position_Lists (State);
+            Put ("White attempting move ");
+            Print_Move (Move);
+            New_Line;
+            Put      ("Position ");
+            Print_Position (Move.To);
+            Put_Line (" is marked '" & State.Board_Array(Move.To.R, Move.To.C) & "'");
             raise Illegal_Move with "White attempting to capture own piece";
             
          end if;
@@ -394,12 +434,30 @@ package body Board is
          
          if (not Is_In (Move.Piece, Black_Piece_Set)) then
             
+            Print_Move_List (State.Move_Log);
+            Print_Board (State);
+            Print_Position_Lists (State);
+            Put ("Black attempting move ");
+            Print_Move (Move);
+            New_Line;
+            Put      ("Position ");
+            Print_Position (Move.From);
+            Put_Line (" is marked '" & State.Board_Array(Move.From.R, Move.From.C) & "'");
             raise Illegal_Move with "Origin piece not owned by side on move";
             
          end if;
          
          if (Is_In (Move.Capture, Black_Piece_Set)) then
             
+            Print_Move_List (State.Move_Log);
+            Print_Board (State);
+            Print_Position_Lists (State);
+            Put ("Black attempting move ");
+            Print_Move (Move);
+            New_Line;
+            Put      ("Position ");
+            Print_Position (Move.To);
+            Put_Line (" is marked '" & State.Board_Array(Move.To.R, Move.To.C) & "'");
             raise Illegal_Move with "Black attempting to capture own piece";
             
          end if;
@@ -581,7 +639,7 @@ package body Board is
          Move_Vectors.Append (Move_List,
                               (Position,
                                (X, Board_Column_Type'Val (Y)),
-                               Piece, Cap_Piece));         
+                               Piece, Cap_Piece, Integer'First + 1));         
          
          exit Scan_Loop when (Stop_Flag = True);
          
@@ -677,6 +735,9 @@ package body Board is
          Put (" captures " & Move.Capture);
          
       end if;
+      
+      Put ("  Score ");
+      Put (Move.Score, 0);
       
    end Print_Move;
    
@@ -808,14 +869,18 @@ package body Board is
          
          Move_Vectors.Delete_Last (State.Move_Log);
          
-         -- Update the move counter and side on move
+         -- Update the move counter and side on move, replace captured pieces
          
          if (State.Side_On_Move = W) then
             
             State.Turn_Counter := State.Turn_Counter - 1;
             State.Side_On_Move := B;
             
-            -- Update the positions lists
+            -- Update the positions lists. Since SOM is W, B moved last...
+            --   Find the Move.To of the last move and update the black
+            --   position list to reflect the piece moved to be at
+            --   Old_Move.From and if there was a piece captured, but that
+            --   position back on white's position list.
             
             Cursor := Position_Vectors.Find  (State.Black_Positions,
                                               Old_Move.To);
