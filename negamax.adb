@@ -70,9 +70,6 @@ package body Negamax is
       Best_Score      := -10_000;
       Move_Cursor     := Move_Vectors.First (Move_List);
       
-      --  Put_Line ("Depth : " & Integer'Image (Depth));
-      --  Print_Position_Lists (State);
-      
   Child_Search_Loop :
       while (Move_Vectors.Has_Element (Move_Cursor)) loop
          
@@ -103,21 +100,6 @@ package body Negamax is
             Best_Depth := Depth;
          end if;
          
-         --  if (Nega_Score = Best_Score) then
-         --     if (Depth > Best_Depth) then
-                              
-         --        Best_Depth := Depth;
-               
-         --        if (Depth = Max_Depth) then
-         --           Put ("New best move: ");
-         --           Print_Move (Move);
-         --           New_Line;
-         --           Best_Move  := Move;
-         --        end if;
-               
-         --     end if;
-         --  end if;
-               
          
          if (Nega_Score > Best_Score) then
             
@@ -130,25 +112,16 @@ package body Negamax is
             
          end if;
          
+         
          Local_Alpha := Integer'Max (Local_Alpha, Nega_Score);
          
-         --  if (Depth = Top_Level) then
-         --     Put ("Best Depth :" & Integer'Image (Best_Depth));
-         --     Put ("  Move : ");
-         --     Print_Move (Move);
-         --     Set_Col (44);
-         --     Put ("Best : ");
-         --     Put (Best_Score, 6);
-         --     Put ("  Nega : ");
-         --     Put (Nega_Score, 6);
-         --     New_Line;
-         --  end if;
          
          if (Local_Alpha >= Local_Beta) then
             
             exit Child_Search_Loop;
             
          end if;
+         
          
          Move_Vectors.Next (Move_Cursor);
          

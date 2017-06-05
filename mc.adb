@@ -162,18 +162,10 @@ Game_Loop :
           
           Partial_Flag  := False;
           
-          --  Print_Position_Lists (Game_State);
-          
           Best_Score := Negamax.Negamax (Game_State, 1, 1,
                                          Integer'First + 1, Integer'Last,
                                          Best_Move, Best_Depth, Thinking_Time,
                                          Partial_Flag);
-          
-          --  Put ("Depth 1 computed, best move is ");
-          --  Print_Move (Best_Move);
-          --  Put (" score ");
-          --  Put (Best_Score);
-          --  New_Line;
           
           if (Best_Score /= 10_000) then
              
@@ -186,27 +178,11 @@ Game_Loop :
                                                   Best_Depth, Thinking_Time,
                                                   Partial_Flag);
                 
-                --  Put ("Depth ");
-                --  Put (I, 0);
-                --  Put (" computed, iterative move is ");
-                --  Print_Move (Iterative_Move);
-                --  Put (" score ");
-                --  Put (Negamax_Score);
-                
                 if (Nega_Score = -10_000) Then
                    
-                   --  New_Line;
                    exit Iterative_Loop;
                    
                 elsif (Partial_Flag = True) then
-                   
-                   --  Put ("Time limit expired at depth ");
-                   --  Put (I, 0);
-                   --  Put (" after ");
-                   --  Put (Image (To_Duration (Clock - 
-                   --                             Thinking_Time + 
-                   --                             Milliseconds (Max_Time))));
-                   --  New_Line;
                    
                    exit Iterative_Loop;
                     
@@ -214,7 +190,7 @@ Game_Loop :
                    
                    Best_Move  := Iterative_Move;
                    Best_Score := Nega_Score;
-                   --  New_Line;
+                   
                    exit Iterative_Loop;
                    
                 else
@@ -223,8 +199,6 @@ Game_Loop :
                    Best_Score := Nega_Score;
                    
                 end if;
-                
-                --  New_Line;
                 
              end loop Iterative_loop;
              
@@ -238,13 +212,9 @@ Game_Loop :
             To_Lower (Board_Column_Type'Image (Best_Move.to.C)) &
             Trim (Board_Row_Type'Image (Best_Move.To.R), Both);
           
-          --  Put_Line (Standard_Error, "I'm moving " & Move_Command);
-          
           Sendcmd (Move_Command);
           
           Move_Piece (Game_State, Move_Command);
-          
-          --  Move_Vectors.Clear (Move_List);
           
        end if;
        

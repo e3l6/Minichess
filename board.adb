@@ -785,18 +785,6 @@ package body Board is
          
          Old_Move := Move_Vectors.Last_Element (State.Move_Log);
          
-         -- Move the piece back to its origin, and replace the captured piece
-         
-         --  Put ("Undoing ");
-         --  Print_Move (Old_Move);
-         --  New_Line;
-         
-         --  if (Old_Move.To.R = 6) then            
-         --     Put ("Old piece is '" & Old_Move.Piece & "'");
-         --     Put_line (" Old capture is '" & Old_Move.Capture & "'");
-         --     Print_Board (State);
-         --     Print_Move_List (State.Move_Log);
-         --  end if;
          
          State.Board_Array (Old_Move.From.R, Old_Move.From.C) :=
            Old_Move.Piece;
